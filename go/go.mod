@@ -6,7 +6,7 @@ require (
 	github.com/saichler/reflect/go v0.0.0-20250317153135-a0a75946f793
 	github.com/saichler/serializer/go v0.0.0-20250312171751-f16ab3ede337
 	github.com/saichler/servicepoints/go v0.0.0-20250312193859-1ab8bbb11c85
-	github.com/saichler/shared/go v0.0.0-20250311194431-666c46978b49
+	github.com/saichler/shared/go v0.0.0-20250320040155-36b055938c7c
 	github.com/saichler/types/go v0.0.0-20250317151948-b4989260e7d5
 	google.golang.org/protobuf v1.36.5
 )
