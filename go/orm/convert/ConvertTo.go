@@ -22,7 +22,6 @@ func ConvertTo(any interface{}, res common.IResources) (*types.RelationalData, e
 	data := &types.RelationalData{}
 	data.Tables = make(map[string]*types.Table)
 	data.RootTypeName = TypeOf(v)
-
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
 		return nil, errors.New("No node for type " + v.Type().Name())

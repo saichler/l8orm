@@ -25,7 +25,8 @@ func RegisterConvertCenter(serviceArea int32, resources common.IResources) {
 }
 
 func (this *ConvertServicePoint) Post(pb proto.Message, resourcs common.IResources) (proto.Message, error) {
-	return ConvertTo(pb, resourcs)
+	resp, err := ConvertTo(pb, resourcs)
+	return resp, err
 }
 func (this *ConvertServicePoint) Put(pb proto.Message, resourcs common.IResources) (proto.Message, error) {
 	return nil, nil
