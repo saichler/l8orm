@@ -5,7 +5,9 @@ import (
 	types2 "github.com/saichler/l8orm/go/types"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/layer8/go/overlay/health"
+	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
+	"github.com/saichler/types/go/testtypes"
 	"github.com/saichler/types/go/types"
 	"testing"
 	"time"
@@ -28,27 +30,42 @@ func TestConvertServicePoint(t *testing.T) {
 	nic.Unicast(nic.Resources().Config().RemoteUuid, health.ServiceName, 0, types.Action_PATCH, hp)
 	time.Sleep(time.Second)
 
-	pb := utils.CreateTestModelInstance(1)
+	before := utils.CreateTestModelInstance(1)
 	nic2 := topo.VnicByVnetNum(1, 4)
-	/*
-		data, err := nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST, pb)
-		if err == nil {
-			Log.Fail(t, "Expected an error as we did not register the type")
-			return
-		}*/
-	nic.Resources().Introspector().Inspect(pb)
-	nic2.Resources().Introspector().Inspect(pb)
-	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
-
-	data, err := nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST, pb)
-	if err != nil {
-		Log.Fail(t, err)
+	resp := nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST, before)
+	if resp.Error() == nil {
+		Log.Fail(t, "Expected an error as we did not register the type")
 		return
 	}
 
-	rlData := data.(*types2.RelationalData)
+	nic.Resources().Introspector().Inspect(before)
+	nic2.Resources().Introspector().Inspect(before)
+	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
+
+	resp = nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST, before)
+	if resp != nil && resp.Error() != nil {
+		Log.Fail(t, resp.Error())
+		return
+	}
+
+	rlData := resp.Element().(*types2.RelationalData)
 	if len(rlData.Tables) != 3 {
 		Log.Fail(t, "Expected 3 tables")
+		return
+	}
+
+	resp = nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_GET, rlData)
+	if resp.Error() != nil {
+		Log.Fail(t, resp.Error().Error())
+		return
+	}
+
+	after := resp.Element().(*testtypes.TestProto)
+
+	upd := updating.NewUpdater(nic.Resources().Introspector(), false)
+	upd.Update(before, after)
+	if len(upd.Changes()) > 0 {
+		Log.Fail(t, "Expected no changes:", len(upd.Changes()))
 		return
 	}
 }

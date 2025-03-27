@@ -1,7 +1,6 @@
 package convert
 
 import (
-	"errors"
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/serializer/go/serialize/object"
 	strings2 "github.com/saichler/shared/go/share/strings"
@@ -12,12 +11,17 @@ import (
 	"strings"
 )
 
-func ConvertFrom(data *types.RelationalData, res common.IResources) (interface{}, error) {
+func ConvertFrom(o common.IMObjects, res common.IResources) common.IMObjects {
+	data := o.Element().(*types.RelationalData)
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
-		return nil, errors.New("No node for type " + data.RootTypeName)
+		return object.NewError("No node for type " + data.RootTypeName)
 	}
-	return convertFrom(node, "", data, res)
+	resp, e := convertFrom(node, "", data, res)
+	if e != nil {
+		return object.NewError(e.Error())
+	}
+	return object.New(nil, resp)
 }
 
 func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalData, res common.IResources) (interface{}, error) {
@@ -150,7 +154,7 @@ func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	obj := object.NewDecode(data, 0, "", r)
+	obj := object.NewDecode(data, 0, r)
 	v, e := obj.Get()
 	if e != nil {
 		return e

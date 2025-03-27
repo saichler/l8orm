@@ -2,7 +2,6 @@ package convert
 
 import (
 	"bytes"
-	"errors"
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/reflect/go/reflect/helping"
 	"github.com/saichler/serializer/go/serialize/object"
@@ -13,25 +12,26 @@ import (
 	"strconv"
 )
 
-func ConvertTo(any interface{}, res common.IResources) (*types.RelationalData, error) {
-	if any == nil {
-		return nil, nil
+func ConvertTo(objects common.IMObjects, res common.IResources) common.IMObjects {
+	if objects == nil {
+		return nil
 	}
 
-	v := reflect.ValueOf(any)
 	data := &types.RelationalData{}
 	data.Tables = make(map[string]*types.Table)
+	v := reflect.ValueOf(objects.Element())
 	data.RootTypeName = TypeOf(v)
+
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
-		return nil, errors.New("No node for type " + v.Type().Name())
+		return object.NewError("No node for type " + v.Type().Name())
 	}
 
 	if v.Kind() == reflect.Slice {
 		for i := 0; i < v.Len(); i++ {
 			err := convertTo(v, "", strconv.Itoa(i), node, data, res)
 			if err != nil {
-				return nil, err
+				return object.NewError(err.Error())
 			}
 		}
 	} else if v.Kind() == reflect.Map {
@@ -41,17 +41,17 @@ func ConvertTo(any interface{}, res common.IResources) (*types.RelationalData, e
 			mapKeyStr.TypesPrefix = true
 			err := convertTo(v, "", mapKeyStr.ToString(mapKey), node, data, res)
 			if err != nil {
-				return nil, err
+				return object.NewError(err.Error())
 			}
 		}
 	} else {
 		err := convertTo(v, "", "", node, data, res)
 		if err != nil {
-			return nil, err
+			return object.NewError(err.Error())
 		}
 	}
 
-	return data, nil
+	return object.New(nil, data)
 }
 
 func TypeOf(v reflect.Value) string {
