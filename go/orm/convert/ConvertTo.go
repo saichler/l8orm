@@ -27,25 +27,24 @@ func ConvertTo(objects common.IMObjects, res common.IResources) common.IMObjects
 		return object.NewError("No node for type " + v.Type().Name())
 	}
 
-	if v.Kind() == reflect.Slice {
-		for i := 0; i < v.Len(); i++ {
-			err := convertTo(v, "", strconv.Itoa(i), node, data, res)
-			if err != nil {
-				return object.NewError(err.Error())
-			}
-		}
-	} else if v.Kind() == reflect.Map {
-		mapKeys := v.MapKeys()
-		for _, mapKey := range mapKeys {
-			mapKeyStr := strings.New()
-			mapKeyStr.TypesPrefix = true
-			err := convertTo(v, "", mapKeyStr.ToString(mapKey), node, data, res)
-			if err != nil {
-				return object.NewError(err.Error())
-			}
-		}
-	} else {
+	elements := objects.Elements()
+	keys := objects.Keys()
+
+	if len(elements) == 1 {
 		err := convertTo(v, "", "", node, data, res)
+		if err != nil {
+			return object.NewError(err.Error())
+		}
+		return object.New(nil, data)
+	}
+
+	for i, element := range elements {
+		key := ""
+		if keys[i] != nil {
+			str := strings.New()
+			key = str.ToString(reflect.ValueOf(keys[i]))
+		}
+		err := convertTo(reflect.ValueOf(element), "", key, node, data, res)
 		if err != nil {
 			return object.NewError(err.Error())
 		}

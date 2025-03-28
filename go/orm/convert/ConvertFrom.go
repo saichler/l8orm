@@ -40,7 +40,6 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 	rows := make(map[string]interface{}, 0)
 	subTableAttributes := make(map[string]*types2.RNode)
 	subAttributesFull := false
-	lastRecKey := ""
 	for _, row := range attributeRows.Rows {
 		instance, err := info.NewInstance()
 		if err != nil {
@@ -74,12 +73,8 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 
 		subAttributesFull = true
 		rows[row.RecKey] = instance
-		lastRecKey = row.RecKey
 	}
 
-	if !node.IsMap && !node.IsSlice {
-		return rows[lastRecKey], nil
-	}
 	if node.IsSlice {
 		return convertRowsToSlice(rows, node, res.Registry())
 	}
@@ -93,7 +88,7 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 		}
 		return v, e
 	}
-	return nil, nil
+	return rows, nil
 }
 
 func convertRowsToSlice(rows map[string]interface{}, node *types2.RNode, r common.IRegistry) (interface{}, error) {
@@ -169,6 +164,12 @@ func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *
 
 func SetValueFromSubTable(attrName string, value reflect.Value, i interface{}) {
 	fieldValue := value.FieldByName(attrName)
+	v := reflect.ValueOf(i)
+	if v.Kind() == reflect.Map && fieldValue.Kind() != reflect.Map {
+		mapKeys := v.MapKeys()
+		fieldValue.Set(reflect.ValueOf(v.MapIndex(mapKeys[0]).Interface()))
+		return
+	}
 	fieldValue.Set(reflect.ValueOf(i))
 }
 
