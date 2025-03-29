@@ -86,11 +86,11 @@ func TestConvertServicePointMulti(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
 
-	node, _ := nic.Resources().Introspector().Inspect(before1)
-	nic2 := topo.VnicByVnetNum(1, 4)
-	nic2.Resources().Introspector().Inspect(before1)
-	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
-	introspecting.AddPrimaryKeyDecorator(node, "MyString")
+	//node, _ := nic.Resources().Introspector().Inspect(before1)
+	nic2 := topo.VnicByVnetNum(1, 3)
+	nic2.Resources().Registry().Register(&types2.RelationalData{})
+	//nic2.Resources().Introspector().Inspect(before1)
+	//introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 	resp := nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST,
 		[]*testtypes.TestProto{before1, before2})
@@ -105,6 +105,11 @@ func TestConvertServicePointMulti(t *testing.T) {
 		return
 	}
 
+	if len(rlData.Tables["TestProto"].InstanceRows[""].AttributeRows[""].Rows) != 2 {
+		Log.Fail(t, "Expected 2 instances")
+		return
+	}
+
 	resp = nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_GET, rlData)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
@@ -112,7 +117,7 @@ func TestConvertServicePointMulti(t *testing.T) {
 	}
 
 	if len(resp.Elements()) != 2 {
-		Log.Fail(t, "Expected 2 elements")
+		Log.Fail(t, "Expected 2 elements:", len(resp.Elements()))
 		return
 	}
 
