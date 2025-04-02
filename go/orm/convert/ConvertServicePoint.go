@@ -23,25 +23,25 @@ func RegisterConvertCenter(serviceArea int32, resources common.IResources) {
 	}
 }
 
-func (this *ConvertServicePoint) Post(pb common.IMObjects, resourcs common.IResources) common.IMObjects {
+func (this *ConvertServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {
 	return ConvertTo(pb, resourcs)
 }
-func (this *ConvertServicePoint) Put(pb common.IMObjects, resourcs common.IResources) common.IMObjects {
+func (this *ConvertServicePoint) Put(pb common.IElements, resourcs common.IResources) common.IElements {
 	return nil
 }
-func (this *ConvertServicePoint) Patch(pb common.IMObjects, resourcs common.IResources) common.IMObjects {
+func (this *ConvertServicePoint) Patch(pb common.IElements, resourcs common.IResources) common.IElements {
 	return nil
 }
-func (this *ConvertServicePoint) Delete(pb common.IMObjects, resourcs common.IResources) common.IMObjects {
+func (this *ConvertServicePoint) Delete(pb common.IElements, resourcs common.IResources) common.IElements {
 	return nil
 }
-func (this *ConvertServicePoint) Get(pb common.IMObjects, resourcs common.IResources) common.IMObjects {
+func (this *ConvertServicePoint) Get(pb common.IElements, resourcs common.IResources) common.IElements {
 	return ConvertFrom(pb, resourcs)
 }
-func (this *ConvertServicePoint) GetCopy(pb common.IMObjects, resourcs common.IResources) common.IMObjects {
+func (this *ConvertServicePoint) GetCopy(pb common.IElements, resourcs common.IResources) common.IElements {
 	return nil
 }
-func (this *ConvertServicePoint) Failed(pb common.IMObjects, resourcs common.IResources, msg *types2.Message) common.IMObjects {
+func (this *ConvertServicePoint) Failed(pb common.IElements, resourcs common.IResources, msg *types2.Message) common.IElements {
 	return nil
 }
 func (this *ConvertServicePoint) EndPoint() string {
@@ -53,6 +53,6 @@ func (this *ConvertServicePoint) ServiceName() string {
 func (this *ConvertServicePoint) Transactional() bool   { return false }
 func (this *ConvertServicePoint) ReplicationCount() int { return 0 }
 func (this *ConvertServicePoint) ReplicationScore() int { return 0 }
-func (this *ConvertServicePoint) ServiceModel() common.IMObjects {
+func (this *ConvertServicePoint) ServiceModel() common.IElements {
 	return object.New(nil, &types.RelationalData{})
 }

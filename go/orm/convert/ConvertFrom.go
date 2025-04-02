@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func ConvertFrom(o common.IMObjects, res common.IResources) common.IMObjects {
+func ConvertFrom(o common.IElements, res common.IResources) common.IElements {
 	data := o.Element().(*types.RelationalData)
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
@@ -53,7 +53,10 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 				}
 				continue
 			}
-			colIndex := table.Columns[attrName]
+			colIndex, ok := table.Columns[attrName]
+			if !ok {
+				continue
+			}
 			e = SetValueFromRow(colIndex, attrName, value, row, res.Registry())
 			if e != nil {
 				return nil, e

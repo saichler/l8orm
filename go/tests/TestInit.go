@@ -1,10 +1,21 @@
 package tests
 
 import (
+	"database/sql"
+	"fmt"
+	_ "github.com/lib/pq"
+	"github.com/saichler/l8orm/go/orm/convert"
+	"github.com/saichler/l8orm/go/orm/persist"
+	"github.com/saichler/l8orm/go/types"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	. "github.com/saichler/l8test/go/infra/t_topology"
 	"github.com/saichler/layer8/go/overlay/protocol"
+	"github.com/saichler/reflect/go/reflect/introspecting"
+	"github.com/saichler/reflect/go/tests/utils"
+	"github.com/saichler/serializer/go/serialize/object"
 	. "github.com/saichler/types/go/common"
+	"github.com/saichler/types/go/testtypes"
+	"testing"
 )
 
 var topo *TestTopology
@@ -33,4 +44,48 @@ func setupTopology() {
 
 func shutdownTopology() {
 	topo.Shutdown()
+}
+
+func openDBConection() *sql.DB {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		"127.0.0.1", 5432, "postgres", "admin", "postgres")
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
+func cleanup(db *sql.DB) {
+	defer db.Close()
+	db.Exec("drop table testproto;")
+	db.Exec("drop table testprotosub")
+	db.Exec("drop table testprotosubsub")
+}
+
+func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *persist.Postgres) {
+	db := openDBConection()
+	recs := make([]*testtypes.TestProto, size)
+	for i := 0; i < 100; i++ {
+		recs[i] = utils.CreateTestModelInstance(i)
+	}
+	node, _ := res.Introspector().Inspect(&testtypes.TestProto{})
+	introspecting.AddPrimaryKeyDecorator(node, "MyString")
+
+	resp := convert.ConvertTo(object.New(nil, recs), res)
+	if resp != nil && resp.Error() != nil {
+		Log.Fail(t, resp.Error())
+		return false, nil, nil
+	}
+
+	relData := resp.Element().(*types.RelationalData)
+
+	p := persist.NewPostgres(db, res)
+	err := p.Write(relData)
+	if err != nil {
+		Log.Fail(t, "Error writing relationship", err)
+		return false, nil, nil
+	}
+	return true, db, p
 }

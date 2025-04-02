@@ -24,16 +24,16 @@ func TestConvertServicePoint(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	convert.RegisterConvertCenter(0, nic.Resources())
 	hc := health.Health(nic.Resources())
-	hp := hc.HealthPoint(nic.Resources().Config().LocalUuid)
+	hp := hc.HealthPoint(nic.Resources().SysConfig().LocalUuid)
 	hp.Services.ServiceToAreas[convert.ServiceName] = &types.ServiceAreas{}
 	hp.Services.ServiceToAreas[convert.ServiceName].Areas = make(map[int32]*types.ServiceAreaInfo)
 	hp.Services.ServiceToAreas[convert.ServiceName].Areas[0] = &types.ServiceAreaInfo{}
-	nic.Unicast(nic.Resources().Config().RemoteUuid, health.ServiceName, 0, types.Action_PATCH, hp)
+	nic.Unicast(nic.Resources().SysConfig().RemoteUuid, health.ServiceName, 0, types.Action_PATCH, hp)
 	time.Sleep(time.Second)
 
 	before := utils.CreateTestModelInstance(1)
 	nic2 := topo.VnicByVnetNum(1, 4)
-	resp := nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST, before)
+	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, types.Action_POST, before)
 	if resp.Error() == nil {
 		Log.Fail(t, "Expected an error as we did not register the type")
 		return
@@ -44,7 +44,7 @@ func TestConvertServicePoint(t *testing.T) {
 	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	resp = nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST, before)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, types.Action_POST, before)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -56,7 +56,7 @@ func TestConvertServicePoint(t *testing.T) {
 		return
 	}
 
-	resp = nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_GET, rlData)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, types.Action_GET, rlData)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
 		return
@@ -76,11 +76,11 @@ func TestConvertServicePointMulti(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	convert.RegisterConvertCenter(0, nic.Resources())
 	hc := health.Health(nic.Resources())
-	hp := hc.HealthPoint(nic.Resources().Config().LocalUuid)
+	hp := hc.HealthPoint(nic.Resources().SysConfig().LocalUuid)
 	hp.Services.ServiceToAreas[convert.ServiceName] = &types.ServiceAreas{}
 	hp.Services.ServiceToAreas[convert.ServiceName].Areas = make(map[int32]*types.ServiceAreaInfo)
 	hp.Services.ServiceToAreas[convert.ServiceName].Areas[0] = &types.ServiceAreaInfo{}
-	nic.Unicast(nic.Resources().Config().RemoteUuid, health.ServiceName, 0, types.Action_PATCH, hp)
+	nic.Unicast(nic.Resources().SysConfig().RemoteUuid, health.ServiceName, 0, types.Action_PATCH, hp)
 	time.Sleep(time.Second)
 
 	before1 := utils.CreateTestModelInstance(1)
@@ -92,7 +92,7 @@ func TestConvertServicePointMulti(t *testing.T) {
 	//nic2.Resources().Introspector().Inspect(before1)
 	//introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	resp := nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_POST,
+	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, types.Action_POST,
 		[]*testtypes.TestProto{before1, before2})
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
@@ -110,7 +110,7 @@ func TestConvertServicePointMulti(t *testing.T) {
 		return
 	}
 
-	resp = nic2.Request(nic.Resources().Config().LocalUuid, convert.ServiceName, 0, types.Action_GET, rlData)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, types.Action_GET, rlData)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
 		return

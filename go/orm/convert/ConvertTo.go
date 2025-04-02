@@ -2,7 +2,6 @@ package convert
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/reflect/go/reflect/helping"
 	"github.com/saichler/serializer/go/serialize/object"
@@ -13,7 +12,7 @@ import (
 	"strconv"
 )
 
-func ConvertTo(objects common.IMObjects, res common.IResources) common.IMObjects {
+func ConvertTo(objects common.IElements, res common.IResources) common.IElements {
 	if objects == nil {
 		return nil
 	}
@@ -129,25 +128,8 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode,
 		}
 	}
 
-	if table.Name == "TestProto" {
-		fmt.Println("hhh")
-	}
-
 	attributeRows.Rows = append(attributeRows.Rows, row)
-
 	return nil
-}
-
-func SetColumns(table *types.Table, node *types2.RNode) {
-	if table.Columns == nil {
-		table.Columns = make(map[string]int32)
-		for attrName, attrNode := range node.Attributes {
-			if attrNode.IsStruct {
-				continue
-			}
-			table.Columns[attrName] = int32(len(table.Columns) + 1)
-		}
-	}
 }
 
 func TableAndRowsCreate(node *types2.RNode, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
