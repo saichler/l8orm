@@ -40,12 +40,14 @@ func (this *Postgres) Read(query common.IQuery) (*types.RelationalData, error) {
 		if !ok {
 			return nil, errors.New("table not found " + data.RootTypeName)
 		}
-		statement := stmt.NewStatement(node, table.Columns, this.res.Registry())
+		statement := stmt.NewStatement(node, table.Columns, query, this.res.Registry())
 		st, err := statement.SelectStatement(tx)
 		if err != nil {
 			return nil, err
 		}
-
+		if st == nil {
+			continue
+		}
 		rows, err := st.Query()
 		if err != nil {
 			return nil, err

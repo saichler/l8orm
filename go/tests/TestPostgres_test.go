@@ -149,6 +149,7 @@ func TestPostgresCriteria(t *testing.T) {
 	relData, err := p.Read(query)
 	if err != nil {
 		Log.Fail(t, err)
+		return
 	}
 	elems := object.New(nil, relData)
 	readObjects := convert.ConvertFrom(elems, res)

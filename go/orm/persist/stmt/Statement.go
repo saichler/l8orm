@@ -11,19 +11,19 @@ import (
 )
 
 type Statement struct {
-	fields   []string
-	values   map[string]int
-	columns  map[string]int32
-	registy  common.IRegistry
-	node     *types2.RNode
-	criteria common.IExpression
+	fields  []string
+	values  map[string]int
+	columns map[string]int32
+	registy common.IRegistry
+	node    *types2.RNode
+	query   common.IQuery
 
 	insertStmt *sql.Stmt
 	selectStmt *sql.Stmt
 }
 
-func NewStatement(node *types2.RNode, columns map[string]int32, criteria common.IExpression, registy common.IRegistry) *Statement {
-	return &Statement{node: node, columns: columns, registy: registy, criteria: criteria}
+func NewStatement(node *types2.RNode, columns map[string]int32, query common.IQuery, registy common.IRegistry) *Statement {
+	return &Statement{node: node, columns: columns, registy: registy, query: query}
 }
 
 func (this *Statement) RowValues(row *types.Row) ([]interface{}, error) {

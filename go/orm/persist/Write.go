@@ -43,7 +43,7 @@ func (this *Postgres) writeData(data *types.RelationalData) error {
 		if !ok {
 			return errors.New("No node was found for " + tableName)
 		}
-		statement := stmt.NewStatement(node, table.Columns, this.res.Registry())
+		statement := stmt.NewStatement(node, table.Columns, nil, this.res.Registry())
 		insert, err := statement.InsertStatement(tx)
 		if err != nil {
 			return err

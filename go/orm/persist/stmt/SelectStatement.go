@@ -19,20 +19,29 @@ func (this *Statement) SelectStatement(tx *sql.Tx) (*sql.Stmt, error) {
 }
 
 func (this *Statement) createSelectStatement(tx *sql.Tx) error {
-	sel := strings.New("Select ")
-	if this.fields == nil {
-		this.fields, this.values = fieldsOf(this.node)
-	}
-	first := true
-	for _, fieldName := range this.fields {
-		if !first {
-			sel.Add(",")
+	var sel *strings.String
+	if this.query != nil {
+		s, ok := this.Query2Sql(this.query, this.node.TypeName)
+		if !ok {
+			return nil
 		}
-		first = false
-		sel.Add(fieldName)
+		sel = strings.New(s)
+	} else {
+		sel = strings.New("Select ")
+		if this.fields == nil {
+			this.fields, this.values = fieldsOf(this.node)
+		}
+		first := true
+		for _, fieldName := range this.fields {
+			if !first {
+				sel.Add(",")
+			}
+			first = false
+			sel.Add(fieldName)
+		}
+		sel.Add(" from ").Add(this.node.TypeName)
+		sel.Add(";")
 	}
-	sel.Add(" from ").Add(this.node.TypeName)
-	sel.Add(";")
 	st, err := tx.Prepare(sel.String())
 	if err != nil {
 		return err
