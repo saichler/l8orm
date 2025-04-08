@@ -4,7 +4,6 @@ import (
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/serializer/go/serialize/object"
 	"github.com/saichler/types/go/common"
-	types2 "github.com/saichler/types/go/types"
 )
 
 const (
@@ -15,7 +14,7 @@ const (
 type ConvertServicePoint struct {
 }
 
-func RegisterConvertCenter(serviceArea int32, resources common.IResources) {
+func RegisterConvertCenter(serviceArea uint16, resources common.IResources) {
 	this := &ConvertServicePoint{}
 	err := resources.ServicePoints().RegisterServicePoint(this, serviceArea)
 	if err != nil {
@@ -41,7 +40,7 @@ func (this *ConvertServicePoint) Get(pb common.IElements, resourcs common.IResou
 func (this *ConvertServicePoint) GetCopy(pb common.IElements, resourcs common.IResources) common.IElements {
 	return nil
 }
-func (this *ConvertServicePoint) Failed(pb common.IElements, resourcs common.IResources, msg *types2.Message) common.IElements {
+func (this *ConvertServicePoint) Failed(pb common.IElements, resourcs common.IResources, msg common.IMessage) common.IElements {
 	return nil
 }
 func (this *ConvertServicePoint) EndPoint() string {

@@ -14,6 +14,9 @@ GOPROXY=direct GOPRIVATE=github.com go mod tidy
 go mod vendor
 
 # Run unit tests with coverage
+../scripts/stop-postgres.sh
+../scripts/start-postgres.sh
+sleep 1
 go test -tags=unit -v -coverpkg=./orm/... -coverprofile=cover.html ./... --failfast
 
 # Open the coverage report in a browser

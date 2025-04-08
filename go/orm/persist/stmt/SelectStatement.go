@@ -83,7 +83,7 @@ func (this *Statement) Row(rows *sql.Rows) (*types.Row, error) {
 		} else {
 			value = vals[i]
 		}
-		obj := object.NewEncode([]byte{}, 0)
+		obj := object.NewEncode()
 		obj.Add(value)
 		if row.ColumnValues == nil {
 			row.ColumnValues = make(map[int32][]byte)

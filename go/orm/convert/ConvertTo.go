@@ -162,7 +162,7 @@ func TableAndRowsCreate(node *types2.RNode, data *types.RelationalData, parentKe
 }
 
 func SetValueToRow(row *types.Row, col int32, val reflect.Value) error {
-	obj := object.NewEncode([]byte{}, 0)
+	obj := object.NewEncode()
 	err := obj.Add(val.Interface())
 	if err != nil {
 		return err
