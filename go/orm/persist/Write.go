@@ -3,8 +3,10 @@ package persist
 import (
 	"database/sql"
 	"errors"
+	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist/stmt"
 	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/types/go/common"
 )
 
 func (this *Postgres) Write(data *types.RelationalData) error {
@@ -64,4 +66,12 @@ func (this *Postgres) writeData(data *types.RelationalData) error {
 		}
 	}
 	return nil
+}
+
+func (this *Postgres) WriteObjects(elems common.IElements, resources common.IResources) error {
+	relData := convert.ConvertTo(elems, resources)
+	if relData.Error() != nil {
+		return relData.Error()
+	}
+	return this.Write(relData.Element().(*types.RelationalData))
 }

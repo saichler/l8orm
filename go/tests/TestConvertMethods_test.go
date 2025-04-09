@@ -137,8 +137,14 @@ func TestConvertMultiValueNoKey(t *testing.T) {
 		return
 	}
 
-	after := resp.Element().(*testtypes.TestProto)
-
+	var after *testtypes.TestProto
+	for _, elem := range resp.Elements() {
+		after = elem.(*testtypes.TestProto)
+		if after.MyString == before1.MyString {
+			break
+		}
+	}
+	
 	upd := updating.NewUpdater(res.Introspector(), false)
 	err := upd.Update(before1, after)
 	if err != nil {
