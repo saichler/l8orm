@@ -14,16 +14,18 @@ type OrmServicePoint struct {
 	serviceName string
 }
 
-func RegisterOrmService(orm common2.IORM, serviceArea uint16, resources common.IResources) {
+func ActivateOrmService(orm common2.IORM, serviceArea uint16, resources common.IResources) error {
 	this := &OrmServicePoint{}
 	this.orm = orm
 	this.serviceName = "Orm-" + reflect.ValueOf(orm).Elem().Type().Name()
-	err := resources.ServicePoints().RegisterServicePoint(this, serviceArea)
+	err := resources.ServicePoints().RegisterServicePoint(this)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	err = resources.ServicePoints().Activate(this.serviceName, serviceArea, nil)
 	resources.Registry().Register(&types.RelationalData{})
 	resources.Registry().Register(&types2.Query{})
+	return nil
 }
 
 func (this *OrmServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {

@@ -14,12 +14,13 @@ const (
 type ConvertServicePoint struct {
 }
 
-func RegisterConvertCenter(serviceArea uint16, resources common.IResources) {
+func ActivateConvertCenter(serviceArea uint16, resources common.IResources) {
 	this := &ConvertServicePoint{}
-	err := resources.ServicePoints().RegisterServicePoint(this, serviceArea)
+	err := resources.ServicePoints().RegisterServicePoint(this)
 	if err != nil {
 		panic(err)
 	}
+	resources.ServicePoints().Activate(ServiceName, serviceArea, nil)
 }
 
 func (this *ConvertServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {

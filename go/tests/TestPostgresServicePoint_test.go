@@ -27,7 +27,7 @@ func TestPostgresServicePoint(t *testing.T) {
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 	p := persist.NewPostgres(db, eg2.Resources())
-	persist.RegisterOrmService(p, 0, eg2.Resources())
+	persist.ActivateOrmService(p, 0, eg2.Resources())
 
 	Log.Info("Before sending update")
 	(eg2.(*vnic.VirtualNetworkInterface)).UpdateServices()

@@ -9,7 +9,6 @@ import (
 	"github.com/saichler/l8orm/go/types"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	. "github.com/saichler/l8test/go/infra/t_topology"
-	"github.com/saichler/layer8/go/overlay/protocol"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/tests/utils"
 	"github.com/saichler/serializer/go/serialize/object"
@@ -22,7 +21,6 @@ var topo *TestTopology
 
 func init() {
 	Log.SetLogLevel(Trace_Level)
-	protocol.UsingContainers = false
 }
 
 func setup() {
