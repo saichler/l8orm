@@ -4,14 +4,12 @@ import (
 	"github.com/saichler/l8orm/go/orm/persist"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/layer8/go/overlay/health"
-	"github.com/saichler/layer8/go/overlay/vnic"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
 	"github.com/saichler/types/go/common"
 	"github.com/saichler/types/go/testtypes"
 	"testing"
-	"time"
 )
 
 func TestPostgresServicePoint(t *testing.T) {
@@ -27,13 +25,7 @@ func TestPostgresServicePoint(t *testing.T) {
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 	p := persist.NewPostgres(db, eg2.Resources())
-	persist.ActivateOrmService(p, 0, eg2.Resources())
-
-	Log.Info("Before sending update")
-	(eg2.(*vnic.VirtualNetworkInterface)).UpdateServices()
-	time.Sleep(time.Second)
-
-	Log.Info("After sending update")
+	persist.RegisterOrmService(p, 0, eg2.Resources(), eg2)
 
 	hc := health.Health(eg2.Resources())
 	hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)

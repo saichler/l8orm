@@ -14,13 +14,9 @@ const (
 type ConvertServicePoint struct {
 }
 
-func ActivateConvertCenter(serviceArea uint16, resources common.IResources) {
+func RegisterConvertCenter(serviceArea uint16, resources common.IResources, vnic common.IVirtualNetworkInterface) error {
 	this := &ConvertServicePoint{}
-	err := resources.ServicePoints().RegisterServicePoint(this)
-	if err != nil {
-		panic(err)
-	}
-	resources.ServicePoints().Activate(ServiceName, serviceArea, nil)
+	return resources.ServicePoints().RegisterServicePoint(this, serviceArea, vnic)
 }
 
 func (this *ConvertServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {
