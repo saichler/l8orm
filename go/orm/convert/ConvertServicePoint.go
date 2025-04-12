@@ -2,21 +2,21 @@ package convert
 
 import (
 	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/serializer/go/serialize/object"
 	"github.com/saichler/types/go/common"
 )
 
 const (
-	ServiceName = "Convert"
-	ENDPOINT    = "convert"
+	ServiceName      = "Convert"
+	ServicePointType = "ConvertServicePoint"
 )
 
 type ConvertServicePoint struct {
 }
 
-func RegisterConvertCenter(serviceArea uint16, resources common.IResources, vnic common.IVirtualNetworkInterface) error {
-	this := &ConvertServicePoint{}
-	return resources.ServicePoints().RegisterServicePoint(this, serviceArea, vnic)
+func (this *ConvertServicePoint) Activate(serviceName string, serviceArea uint16,
+	r common.IResources, l common.IServicePointCacheListener, args ...interface{}) error {
+	r.Registry().Register(&types.RelationalData{})
+	return nil
 }
 
 func (this *ConvertServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {
@@ -40,15 +40,7 @@ func (this *ConvertServicePoint) GetCopy(pb common.IElements, resourcs common.IR
 func (this *ConvertServicePoint) Failed(pb common.IElements, resourcs common.IResources, msg common.IMessage) common.IElements {
 	return nil
 }
-func (this *ConvertServicePoint) EndPoint() string {
-	return ENDPOINT
-}
-func (this *ConvertServicePoint) ServiceName() string {
-	return ServiceName
-}
+
 func (this *ConvertServicePoint) Transactional() bool   { return false }
 func (this *ConvertServicePoint) ReplicationCount() int { return 0 }
 func (this *ConvertServicePoint) ReplicationScore() int { return 0 }
-func (this *ConvertServicePoint) ServiceModel() common.IElements {
-	return object.New(nil, &types.RelationalData{})
-}

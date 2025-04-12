@@ -24,12 +24,15 @@ func TestPostgresServicePoint(t *testing.T) {
 	node, _ = eg2.Resources().Introspector().Inspect(&testtypes.TestProto{})
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
+	serviceName := "orm"
 	p := persist.NewPostgres(db, eg2.Resources())
-	persist.RegisterOrmService(p, 0, eg2.Resources(), eg2)
+
+	eg2.Resources().ServicePoints().AddServicePointType(&persist.OrmServicePoint{})
+	eg2.Resources().ServicePoints().Activate("OrmServicePoint", serviceName, 0, eg2.Resources(), eg2, p)
 
 	hc := health.Health(eg2.Resources())
 	hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)
-	sv, ok := hp.Services.ServiceToAreas["Orm-Postgres"]
+	sv, ok := hp.Services.ServiceToAreas[serviceName]
 	if !ok {
 		Log.Fail(t, "Orm service is missing")
 		return
@@ -43,13 +46,13 @@ func TestPostgresServicePoint(t *testing.T) {
 	before := utils.CreateTestModelInstance(5)
 	eg1.Resources().Registry().Register(before)
 
-	elems := eg1.SingleRequest("Orm-Postgres", 0, common.POST, before)
+	elems := eg1.SingleRequest(serviceName, 0, common.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
 	}
 
-	elems = eg1.SingleRequest("Orm-Postgres", 0, common.GET, "select * from TestProto")
+	elems = eg1.SingleRequest(serviceName, 0, common.GET, "select * from TestProto")
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return

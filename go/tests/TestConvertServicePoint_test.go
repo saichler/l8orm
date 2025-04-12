@@ -23,7 +23,9 @@ func TestMain(m *testing.M) {
 
 func TestConvertServicePoint(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	convert.RegisterConvertCenter(0, nic.Resources(), nil)
+	nic.Resources().ServicePoints().AddServicePointType(&convert.ConvertServicePoint{})
+	nic.Resources().ServicePoints().Activate(convert.ServicePointType, convert.ServiceName, 0, nic.Resources(), nic)
+
 	hc := health.Health(nic.Resources())
 	hp := hc.HealthPoint(nic.Resources().SysConfig().LocalUuid)
 	hp.Services.ServiceToAreas[convert.ServiceName] = &types.ServiceAreas{}
@@ -75,7 +77,8 @@ func TestConvertServicePoint(t *testing.T) {
 
 func TestConvertServicePointMulti(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	convert.RegisterConvertCenter(0, nic.Resources(), nic)
+	nic.Resources().ServicePoints().AddServicePointType(&convert.ConvertServicePoint{})
+	nic.Resources().ServicePoints().Activate(convert.ServicePointType, convert.ServiceName, 0, nic.Resources(), nic)
 
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)

@@ -6,7 +6,6 @@ import (
 	"github.com/saichler/serializer/go/serialize/object"
 	"github.com/saichler/types/go/common"
 	types2 "github.com/saichler/types/go/types"
-	"reflect"
 )
 
 type OrmServicePoint struct {
@@ -14,16 +13,11 @@ type OrmServicePoint struct {
 	serviceName string
 }
 
-func RegisterOrmService(orm common2.IORM, serviceArea uint16, resources common.IResources, vnic common.IVirtualNetworkInterface) error {
-	this := &OrmServicePoint{}
-	this.orm = orm
-	this.serviceName = "Orm-" + reflect.ValueOf(orm).Elem().Type().Name()
-	err := resources.ServicePoints().RegisterServicePoint(this, serviceArea, vnic)
-	if err != nil {
-		return err
-	}
-	resources.Registry().Register(&types.RelationalData{})
-	resources.Registry().Register(&types2.Query{})
+func (this *OrmServicePoint) Activate(serviceName string, serviceArea uint16,
+	r common.IResources, l common.IServicePointCacheListener, args ...interface{}) error {
+	this.orm = args[0].(common2.IORM)
+	r.Registry().Register(&types.RelationalData{})
+	r.Registry().Register(&types2.Query{})
 	return nil
 }
 
@@ -63,12 +57,7 @@ func (this *OrmServicePoint) GetCopy(pb common.IElements, resourcs common.IResou
 func (this *OrmServicePoint) Failed(pb common.IElements, resourcs common.IResources, msg common.IMessage) common.IElements {
 	return nil
 }
-func (this *OrmServicePoint) EndPoint() string {
-	return this.serviceName
-}
-func (this *OrmServicePoint) ServiceName() string {
-	return this.serviceName
-}
+
 func (this *OrmServicePoint) Transactional() bool   { return true }
 func (this *OrmServicePoint) ReplicationCount() int { return 0 }
 func (this *OrmServicePoint) ReplicationScore() int { return 0 }
