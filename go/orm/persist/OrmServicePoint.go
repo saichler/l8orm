@@ -8,6 +8,10 @@ import (
 	types2 "github.com/saichler/types/go/types"
 )
 
+const (
+	ServicePointType = "OrmServicePoint"
+)
+
 type OrmServicePoint struct {
 	orm         common2.IORM
 	serviceName string
@@ -61,6 +65,3 @@ func (this *OrmServicePoint) Failed(pb common.IElements, resourcs common.IResour
 func (this *OrmServicePoint) Transactional() bool   { return true }
 func (this *OrmServicePoint) ReplicationCount() int { return 0 }
 func (this *OrmServicePoint) ReplicationScore() int { return 0 }
-func (this *OrmServicePoint) ServiceModel() common.IElements {
-	return object.New(nil, &types.RelationalData{})
-}

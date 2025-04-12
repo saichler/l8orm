@@ -24,11 +24,11 @@ func TestPostgresServicePoint(t *testing.T) {
 	node, _ = eg2.Resources().Introspector().Inspect(&testtypes.TestProto{})
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	serviceName := "orm"
+	serviceName := "postgres"
 	p := persist.NewPostgres(db, eg2.Resources())
 
 	eg2.Resources().ServicePoints().AddServicePointType(&persist.OrmServicePoint{})
-	eg2.Resources().ServicePoints().Activate("OrmServicePoint", serviceName, 0, eg2.Resources(), eg2, p)
+	eg2.Resources().ServicePoints().Activate(persist.ServicePointType, serviceName, 0, eg2.Resources(), eg2, p)
 
 	hc := health.Health(eg2.Resources())
 	hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)
