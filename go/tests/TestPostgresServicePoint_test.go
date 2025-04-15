@@ -10,6 +10,7 @@ import (
 	"github.com/saichler/types/go/common"
 	"github.com/saichler/types/go/testtypes"
 	"testing"
+	"time"
 )
 
 func TestPostgresServicePoint(t *testing.T) {
@@ -29,6 +30,8 @@ func TestPostgresServicePoint(t *testing.T) {
 
 	eg2.Resources().ServicePoints().AddServicePointType(&persist.OrmServicePoint{})
 	eg2.Resources().ServicePoints().Activate(persist.ServicePointType, serviceName, 0, eg2.Resources(), eg2, p)
+
+	time.Sleep(time.Second)
 
 	hc := health.Health(eg2.Resources())
 	hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)

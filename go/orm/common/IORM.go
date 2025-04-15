@@ -10,4 +10,5 @@ type IORM interface {
 	Write(*types.RelationalData) error
 	ReadObjects(common.IQuery, common.IResources) common.IElements
 	WriteObjects(common.IElements, common.IResources) error
+	Close() error
 }

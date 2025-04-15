@@ -19,6 +19,10 @@ func (this *ConvertServicePoint) Activate(serviceName string, serviceArea uint16
 	return nil
 }
 
+func (this *ConvertServicePoint) DeActivate() error {
+	return nil
+}
+
 func (this *ConvertServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {
 	return ConvertTo(pb, resourcs)
 }

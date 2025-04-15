@@ -88,3 +88,8 @@ func postgresTypeOf(node *types2.RNode) string {
 	//default to enum for now - @TODO - reflect find what is the kind
 	return "integer"
 }
+
+func (this *Postgres) Close() error {
+	this.db.Close()
+	return nil
+}

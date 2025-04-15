@@ -25,6 +25,12 @@ func (this *OrmServicePoint) Activate(serviceName string, serviceArea uint16,
 	return nil
 }
 
+func (this *OrmServicePoint) DeActivate() error {
+	this.orm.Close()
+	this.orm = nil
+	return nil
+}
+
 func (this *OrmServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {
 	relData, ok := pb.Element().(*types.RelationalData)
 	var err error
