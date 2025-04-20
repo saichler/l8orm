@@ -32,6 +32,7 @@ func (this *OrmServicePoint) DeActivate() error {
 }
 
 func (this *OrmServicePoint) Post(pb common.IElements, resourcs common.IResources) common.IElements {
+	resourcs.Logger().Info("Received Element to persist")
 	relData, ok := pb.Element().(*types.RelationalData)
 	var err error
 	if ok {
