@@ -13,12 +13,12 @@ const (
 )
 
 type OrmServicePoint struct {
-	orm         common2.IORM
-	serviceName string
+	orm common2.IORM
 }
 
 func (this *OrmServicePoint) Activate(serviceName string, serviceArea uint16,
 	r common.IResources, l common.IServicePointCacheListener, args ...interface{}) error {
+	r.Logger().Info("ORM Activated for ", serviceName, " area ", serviceArea)
 	this.orm = args[0].(common2.IORM)
 	r.Registry().Register(&types.RelationalData{})
 	r.Registry().Register(&types2.Query{})
