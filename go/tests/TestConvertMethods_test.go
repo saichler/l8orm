@@ -8,13 +8,14 @@ import (
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
 	"github.com/saichler/serializer/go/serialize/object"
+	"github.com/saichler/types/go/common"
 	"github.com/saichler/types/go/testtypes"
 	"testing"
 )
 
 func TestConvert(t *testing.T) {
 	before := utils.CreateTestModelInstance(1)
-	res, _ := CreateResources(25000, 1)
+	res, _ := CreateResources(25000, 1, common.Info_Level)
 	node, _ := res.Introspector().Inspect(before)
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 	resp := convert.ConvertTo(object.New(nil, before), res)
@@ -43,7 +44,7 @@ func TestConvert(t *testing.T) {
 
 	after := resp.Element().(*testtypes.TestProto)
 
-	upd := updating.NewUpdater(res.Introspector(), false)
+	upd := updating.NewUpdater(res.Introspector(), false, false)
 	err := upd.Update(before, after)
 	if err != nil {
 		Log.Fail(t, err)
@@ -57,7 +58,7 @@ func TestConvert(t *testing.T) {
 func TestConvertMultiValue(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
-	res, _ := CreateResources(25000, 1)
+	res, _ := CreateResources(25000, 1, common.Info_Level)
 	node, _ := res.Introspector().Inspect(before1)
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
@@ -92,7 +93,7 @@ func TestConvertMultiValue(t *testing.T) {
 
 	after := resp.Element().(*testtypes.TestProto)
 
-	upd := updating.NewUpdater(res.Introspector(), false)
+	upd := updating.NewUpdater(res.Introspector(), false, false)
 	err := upd.Update(before1, after)
 	if err != nil {
 		Log.Fail(t, err)
@@ -106,7 +107,7 @@ func TestConvertMultiValue(t *testing.T) {
 func TestConvertMultiValueNoKey(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
-	res, _ := CreateResources(25000, 1)
+	res, _ := CreateResources(25000, 1, common.Info_Level)
 
 	resp := convert.ConvertTo(object.New(nil, []*testtypes.TestProto{before1, before2}), res)
 	if resp != nil && resp.Error() != nil {
@@ -144,8 +145,8 @@ func TestConvertMultiValueNoKey(t *testing.T) {
 			break
 		}
 	}
-	
-	upd := updating.NewUpdater(res.Introspector(), false)
+
+	upd := updating.NewUpdater(res.Introspector(), false, false)
 	err := upd.Update(before1, after)
 	if err != nil {
 		Log.Fail(t, err)

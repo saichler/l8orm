@@ -11,6 +11,7 @@ import (
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
 	"github.com/saichler/serializer/go/serialize/object"
+	"github.com/saichler/types/go/common"
 	"github.com/saichler/types/go/testtypes"
 	"testing"
 )
@@ -21,7 +22,7 @@ func TestPostgres(t *testing.T) {
 
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
-	res, _ := CreateResources(25000, 1)
+	res, _ := CreateResources(25000, 1, common.Info_Level)
 	node, _ := res.Introspector().Inspect(before1)
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
@@ -73,7 +74,7 @@ func TestPostgres(t *testing.T) {
 		}
 	}
 
-	upd := updating.NewUpdater(res.Introspector(), true)
+	upd := updating.NewUpdater(res.Introspector(), true, true)
 	upd.Update(before1, after1)
 	if len(upd.Changes()) > 0 {
 		for _, chg := range upd.Changes() {
@@ -84,7 +85,7 @@ func TestPostgres(t *testing.T) {
 		return
 	}
 
-	upd = updating.NewUpdater(res.Introspector(), true)
+	upd = updating.NewUpdater(res.Introspector(), true, true)
 	upd.Update(before2, after2)
 	if len(upd.Changes()) > 0 {
 		Log.Fail(t, "Expected no changes in instance 2")
@@ -93,7 +94,7 @@ func TestPostgres(t *testing.T) {
 }
 
 func TestPostgresFields(t *testing.T) {
-	res, _ := CreateResources(25000, 1)
+	res, _ := CreateResources(25000, 1, common.Info_Level)
 	ok, db, p := writeRecords(100, res, t)
 	defer cleanup(db)
 	if !ok {
@@ -133,7 +134,7 @@ func TestPostgresFields(t *testing.T) {
 }
 
 func TestPostgresCriteria(t *testing.T) {
-	res, _ := CreateResources(25000, 1)
+	res, _ := CreateResources(25000, 1, common.Info_Level)
 	ok, db, p := writeRecords(100, res, t)
 	defer cleanup(db)
 	if !ok {

@@ -43,10 +43,12 @@ func (this *Statement) Query2Sql(query common.IQuery, typeName string) (string, 
 		return buff.String(), true
 	}
 
-	ok, str := expression(query.Criteria(), query.RootType().TypeName)
-	if ok {
-		buff.WriteString(" where ")
-		buff.WriteString(str)
+	if typeName == query.RootType().TypeName {
+		ok, str := expression(query.Criteria(), query.RootType().TypeName)
+		if ok {
+			buff.WriteString(" where ")
+			buff.WriteString(str)
+		}
 	}
 	fmt.Println(buff.String())
 	return buff.String(), true

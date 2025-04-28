@@ -45,6 +45,6 @@ func (this *ConvertServicePoint) Failed(pb common.IElements, resourcs common.IRe
 	return nil
 }
 
-func (this *ConvertServicePoint) Transactional() bool   { return false }
-func (this *ConvertServicePoint) ReplicationCount() int { return 0 }
-func (this *ConvertServicePoint) ReplicationScore() int { return 0 }
+func (this *ConvertServicePoint) TransactionMethod() common.ITransactionMethod {
+	return nil
+}

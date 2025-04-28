@@ -3,9 +3,11 @@ package persist
 import (
 	common2 "github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/serializer/go/serialize/object"
 	"github.com/saichler/types/go/common"
 	types2 "github.com/saichler/types/go/types"
+	"reflect"
 )
 
 const (
@@ -69,6 +71,32 @@ func (this *OrmServicePoint) Failed(pb common.IElements, resourcs common.IResour
 	return nil
 }
 
-func (this *OrmServicePoint) Transactional() bool   { return true }
-func (this *OrmServicePoint) ReplicationCount() int { return 0 }
-func (this *OrmServicePoint) ReplicationScore() int { return 0 }
+func (this *OrmServicePoint) TransactionMethod() common.ITransactionMethod {
+	return this
+}
+
+func (this *OrmServicePoint) Replication() bool {
+	return true
+}
+func (this *OrmServicePoint) ReplicationCount() int {
+	return 2
+}
+func (this *OrmServicePoint) KeyOf(elements common.IElements, resources common.IResources) string {
+	query, err := elements.Query(resources)
+	if err != nil {
+		resources.Logger().Error(err)
+		return ""
+	}
+	if query != nil {
+		return query.KeyOf()
+	}
+	elem := reflect.ValueOf(elements.Element()).Elem()
+	node, _ := resources.Introspector().NodeByTypeName(elem.Type().Name())
+	keyDecorator, _ := introspecting.PrimaryKeyDecorator(node).([]string)
+	field := elem.FieldByName(keyDecorator[0])
+	str := field.String()
+	if str == "" {
+		panic("Empty element")
+	}
+	return str
+}
