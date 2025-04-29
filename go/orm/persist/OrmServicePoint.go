@@ -88,15 +88,19 @@ func (this *OrmServicePoint) KeyOf(elements common.IElements, resources common.I
 		return ""
 	}
 	if query != nil {
+		resources.Logger().Debug("KeyOf query ")
 		return query.KeyOf()
 	}
+
 	elem := reflect.ValueOf(elements.Element()).Elem()
-	node, _ := resources.Introspector().NodeByTypeName(elem.Type().Name())
+	elemTypeName := elem.Type().Name()
+	resources.Logger().Debug("Key Of element of type ", elemTypeName)
+	node, _ := resources.Introspector().NodeByTypeName(elemTypeName)
 	keyDecorator, _ := introspecting.PrimaryKeyDecorator(node).([]string)
 	field := elem.FieldByName(keyDecorator[0])
 	str := field.String()
 	if str == "" {
-		panic("Empty element")
+		panic("Empty key for type " + elemTypeName)
 	}
 	return str
 }
