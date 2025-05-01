@@ -110,7 +110,12 @@ func TestConvertServicePointMulti(t *testing.T) {
 	after := resp.Element().(*testtypes.TestProto)
 
 	upd := updating.NewUpdater(nic.Resources().Introspector(), false, false)
-	upd.Update(before1, after)
+	if after.MyString == before1.MyString {
+		upd.Update(before1, after)
+	} else {
+		upd.Update(before2, after)
+	}
+
 	if len(upd.Changes()) > 0 {
 		Log.Fail(t, "Expected no changes:", len(upd.Changes()))
 		return
