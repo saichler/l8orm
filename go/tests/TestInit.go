@@ -57,9 +57,22 @@ func openDBConection() *sql.DB {
 
 func cleanup(db *sql.DB) {
 	defer db.Close()
-	db.Exec("drop table testproto;")
-	db.Exec("drop table testprotosub")
-	db.Exec("drop table testprotosubsub")
+	clean(db)
+}
+
+func clean(db *sql.DB) {
+	_, e := db.Exec("drop table testproto;")
+	if e != nil {
+		Log.Error(e)
+	}
+	_, e = db.Exec("drop table testprotosub;")
+	if e != nil {
+		Log.Error(e)
+	}
+	_, e = db.Exec("drop table testprotosubsub;")
+	if e != nil {
+		Log.Error(e)
+	}
 }
 
 func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *persist.Postgres) {
