@@ -47,6 +47,7 @@ func (this *Postgres) Read(query common.IQuery) (*types.RelationalData, error) {
 			//When the table does not exist, it means there is no data for this nesting table
 			//hence continue
 			if strings.Contains(err.Error(), "does not exist") {
+				st.Close()
 				continue
 			}
 			return nil, err
