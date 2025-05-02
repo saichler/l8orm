@@ -44,12 +44,6 @@ func (this *Postgres) Read(query common.IQuery) (*types.RelationalData, error) {
 		statement := stmt.NewStatement(node, table.Columns, query, this.res.Registry())
 		st, err := statement.SelectStatement(tx)
 		if err != nil {
-			//When the table does not exist, it means there is no data for this nesting table
-			//hence continue
-			if strings.Contains(err.Error(), "does not exist") {
-				st.Close()
-				continue
-			}
 			return nil, err
 		}
 		if st == nil {

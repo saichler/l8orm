@@ -12,7 +12,11 @@ import (
 func (this *Postgres) Write(data *types.RelationalData) error {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
-	err := this.verifyTables(data)
+	rootNode, ok := this.res.Introspector().NodeByTypeName(data.RootTypeName)
+	if !ok {
+		return errors.New("Cannot find node for root type name " + data.RootTypeName)
+	}
+	err := this.verifyTables(rootNode)
 	if err != nil {
 		return err
 	}

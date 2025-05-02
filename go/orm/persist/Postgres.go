@@ -3,7 +3,6 @@ package persist
 import (
 	"database/sql"
 	"errors"
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/shared/go/share/strings"
 	"github.com/saichler/types/go/common"
 	types2 "github.com/saichler/types/go/types"
@@ -22,8 +21,24 @@ func NewPostgres(db *sql.DB, resourcs common.IResources) *Postgres {
 	return &Postgres{db: db, verifyed: make(map[string]bool), mtx: &sync.Mutex{}, res: resourcs}
 }
 
-func (this *Postgres) verifyTables(data *types.RelationalData) error {
-	for tableName, _ := range data.Tables {
+func collectTables(node *types2.RNode, tables map[string]bool) {
+	tables[node.TypeName] = true
+	if node.Attributes != nil {
+		for _, attr := range node.Attributes {
+			if attr.IsStruct {
+				_, ok := tables[attr.TypeName]
+				if !ok {
+					collectTables(attr, tables)
+				}
+			}
+		}
+	}
+}
+
+func (this *Postgres) verifyTables(rootNode *types2.RNode) error {
+	tables := make(map[string]bool)
+	collectTables(rootNode, tables)
+	for tableName, _ := range tables {
 		_, ok := this.verifyed[tableName]
 		if !ok {
 			err := this.verifyTable(tableName)
