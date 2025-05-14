@@ -7,8 +7,8 @@ import (
 	"github.com/saichler/layer8/go/overlay/health"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/types/go/common"
-	"github.com/saichler/types/go/testtypes"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 	"time"
 )
@@ -31,8 +31,8 @@ func TestMissingTableEmpty(t *testing.T) {
 
 		p := persist.NewPostgres(db, eg2.Resources())
 
-		eg2.Resources().ServicePoints().AddServicePointType(&persist.OrmServicePoint{})
-		eg2.Resources().ServicePoints().Activate(persist.ServicePointType, serviceName, 0, eg2.Resources(), eg2, p)
+		eg2.Resources().Services().RegisterServiceHandlerType(&persist.OrmService{})
+		eg2.Resources().Services().Activate(persist.ServiceType, serviceName, 0, eg2.Resources(), eg2, p)
 	}
 
 	time.Sleep(time.Second * 2)
@@ -45,7 +45,7 @@ func TestMissingTableEmpty(t *testing.T) {
 			destination = eg2.Resources().SysConfig().LocalUuid
 		}
 		hc := health.Health(eg2.Resources())
-		hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)
+		hp := hc.Health(eg2.Resources().SysConfig().LocalUuid)
 		sv, ok := hp.Services.ServiceToAreas[serviceName]
 		if !ok {
 			Log.Fail(t, "Orm service is missing")
@@ -67,7 +67,7 @@ func TestMissingTableEmpty(t *testing.T) {
 	eg1.Resources().Registry().Register(before)
 
 	Log.Info("Post")
-	elems := eg1.SingleRequest(serviceName, 0, common.POST, before)
+	elems := eg1.SingleRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -77,14 +77,14 @@ func TestMissingTableEmpty(t *testing.T) {
 
 	Log.Info("First")
 
-	elems = eg1.SingleRequest(serviceName, 0, common.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.SingleRequest(serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
 
 	Log.Info("Second")
 
-	elems = eg1.Request(destination, serviceName, 0, common.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
@@ -95,7 +95,7 @@ func TestMissingTableEmpty(t *testing.T) {
 	}
 
 	Log.Info("Post 2")
-	elems = eg1.SingleRequest(serviceName, 0, common.POST, before)
+	elems = eg1.SingleRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -104,6 +104,6 @@ func TestMissingTableEmpty(t *testing.T) {
 	time.Sleep(time.Second)
 
 	Log.Info("Third")
-	elems = eg1.Request(destination, serviceName, 0, common.GET, "select * from TestProto")
+	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto")
 	fmt.Println(len(elems.Elements()))
 }

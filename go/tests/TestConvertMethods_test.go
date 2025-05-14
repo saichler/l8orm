@@ -7,15 +7,15 @@ import (
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/serializer/go/serialize/object"
-	"github.com/saichler/types/go/common"
-	"github.com/saichler/types/go/testtypes"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 )
 
 func TestConvert(t *testing.T) {
 	before := utils.CreateTestModelInstance(1)
-	res, _ := CreateResources(25000, 1, common.Info_Level)
+	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	node, _ := res.Introspector().Inspect(before)
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 	resp := convert.ConvertTo(object.New(nil, before), res)
@@ -58,7 +58,7 @@ func TestConvert(t *testing.T) {
 func TestConvertMultiValue(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
-	res, _ := CreateResources(25000, 1, common.Info_Level)
+	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	node, _ := res.Introspector().Inspect(before1)
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
@@ -107,7 +107,7 @@ func TestConvertMultiValue(t *testing.T) {
 func TestConvertMultiValueNoKey(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
-	res, _ := CreateResources(25000, 1, common.Info_Level)
+	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 
 	resp := convert.ConvertTo(object.New(nil, []*testtypes.TestProto{before1, before2}), res)
 	if resp != nil && resp.Error() != nil {

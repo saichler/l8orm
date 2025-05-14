@@ -2,16 +2,16 @@ package convert
 
 import (
 	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/serializer/go/serialize/object"
-	strings2 "github.com/saichler/shared/go/share/strings"
-	"github.com/saichler/types/go/common"
-	types2 "github.com/saichler/types/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	strings2 "github.com/saichler/l8utils/go/utils/strings"
+	"github.com/saichler/l8types/go/ifs"
+	types2 "github.com/saichler/l8types/go/types"
 	"reflect"
 	"strconv"
 	"strings"
 )
 
-func ConvertFrom(o common.IElements, res common.IResources) common.IElements {
+func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
 	data := o.Element().(*types.RelationalData)
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
@@ -24,7 +24,7 @@ func ConvertFrom(o common.IElements, res common.IResources) common.IElements {
 	return object.New(nil, resp)
 }
 
-func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalData, res common.IResources) (interface{}, error) {
+func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalData, res ifs.IResources) (interface{}, error) {
 	table, attributeRows := TableAndRowsGet(node, data, parentKey)
 
 	//No data for this attribute
@@ -94,7 +94,7 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 	return rows, nil
 }
 
-func convertRowsToSlice(rows map[string]interface{}, node *types2.RNode, r common.IRegistry) (interface{}, error) {
+func convertRowsToSlice(rows map[string]interface{}, node *types2.RNode, r ifs.IRegistry) (interface{}, error) {
 	info, e := r.Info(node.TypeName)
 	if e != nil {
 		return nil, e
@@ -111,7 +111,7 @@ func convertRowsToSlice(rows map[string]interface{}, node *types2.RNode, r commo
 	return slice.Interface(), nil
 }
 
-func convertRowsToMap(rows map[string]interface{}, node *types2.RNode, r common.IRegistry) (interface{}, error) {
+func convertRowsToMap(rows map[string]interface{}, node *types2.RNode, r ifs.IRegistry) (interface{}, error) {
 	valInfo, e := r.Info(node.TypeName)
 	if e != nil {
 		return nil, e
@@ -133,7 +133,7 @@ func convertRowsToMap(rows map[string]interface{}, node *types2.RNode, r common.
 	return newMap.Interface(), nil
 }
 
-func GetMapIndex(mapKey string, r common.IRegistry) (reflect.Value, error) {
+func GetMapIndex(mapKey string, r ifs.IRegistry) (reflect.Value, error) {
 	index1 := strings.LastIndex(mapKey, "[")
 	index2 := strings.LastIndex(mapKey, "]")
 	return strings2.FromString(mapKey[index1+1:index2], r)
@@ -146,7 +146,7 @@ func GetSliceIndex(sliceKey string) (int, error) {
 	return index, e
 }
 
-func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *types.Row, r common.IRegistry) error {
+func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *types.Row, r ifs.IRegistry) error {
 	fieldValue := value.FieldByName(attrName)
 	data := row.ColumnValues[colIndex]
 	if data == nil || len(data) == 0 {

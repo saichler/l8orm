@@ -7,8 +7,8 @@ import (
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/types/go/common"
-	"github.com/saichler/types/go/testtypes"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 )
 
@@ -18,14 +18,14 @@ func TestMain(m *testing.M) {
 	tear()
 }
 
-func TestConvertServicePoint(t *testing.T) {
+func TestConvertService(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	nic.Resources().ServicePoints().AddServicePointType(&convert.ConvertServicePoint{})
-	nic.Resources().ServicePoints().Activate(convert.ServicePointType, convert.ServiceName, 0, nic.Resources(), nic)
+	nic.Resources().Services().RegisterServiceHandlerType(&convert.ConvertService{})
+	nic.Resources().Services().Activate(convert.ServiceType, convert.ServiceName, 0, nic.Resources(), nic)
 
 	before := utils.CreateTestModelInstance(1)
 	nic2 := topo.VnicByVnetNum(1, 4)
-	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, common.POST, before)
+	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before)
 	if resp.Error() == nil {
 		Log.Fail(t, "Expected an error as we did not register the type")
 		return
@@ -36,7 +36,7 @@ func TestConvertServicePoint(t *testing.T) {
 	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, common.POST, before)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -48,7 +48,7 @@ func TestConvertServicePoint(t *testing.T) {
 		return
 	}
 
-	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, common.GET, rlData)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.GET, rlData)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
 		return
@@ -64,10 +64,10 @@ func TestConvertServicePoint(t *testing.T) {
 	}
 }
 
-func TestConvertServicePointMulti(t *testing.T) {
+func TestConvertServiceMulti(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	nic.Resources().ServicePoints().AddServicePointType(&convert.ConvertServicePoint{})
-	nic.Resources().ServicePoints().Activate(convert.ServicePointType, convert.ServiceName, 0, nic.Resources(), nic)
+	nic.Resources().Services().RegisterServiceHandlerType(&convert.ConvertService{})
+	nic.Resources().Services().Activate(convert.ServiceType, convert.ServiceName, 0, nic.Resources(), nic)
 
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
@@ -78,7 +78,7 @@ func TestConvertServicePointMulti(t *testing.T) {
 	//nic2.Resources().Introspector().Inspect(before1)
 	//introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, common.POST,
+	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST,
 		[]*testtypes.TestProto{before1, before2})
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
@@ -96,7 +96,7 @@ func TestConvertServicePointMulti(t *testing.T) {
 		return
 	}
 
-	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, common.GET, rlData)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.GET, rlData)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
 		return

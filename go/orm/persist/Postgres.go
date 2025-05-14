@@ -3,9 +3,9 @@ package persist
 import (
 	"database/sql"
 	"errors"
-	"github.com/saichler/shared/go/share/strings"
-	"github.com/saichler/types/go/common"
-	types2 "github.com/saichler/types/go/types"
+	"github.com/saichler/l8utils/go/utils/strings"
+	"github.com/saichler/l8types/go/ifs"
+	types2 "github.com/saichler/l8types/go/types"
 	strings2 "strings"
 	"sync"
 )
@@ -14,10 +14,10 @@ type Postgres struct {
 	db       *sql.DB
 	verifyed map[string]bool
 	mtx      *sync.Mutex
-	res      common.IResources
+	res      ifs.IResources
 }
 
-func NewPostgres(db *sql.DB, resourcs common.IResources) *Postgres {
+func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 	return &Postgres{db: db, verifyed: make(map[string]bool), mtx: &sync.Mutex{}, res: resourcs}
 }
 

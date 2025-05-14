@@ -3,11 +3,11 @@ package stmt
 import (
 	"bytes"
 	"fmt"
-	"github.com/saichler/types/go/common"
+	"github.com/saichler/l8types/go/ifs"
 	"reflect"
 )
 
-func (this *Statement) Query2Sql(query common.IQuery, typeName string) (string, bool) {
+func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, bool) {
 	buff := bytes.Buffer{}
 	if query.Properties() == nil || len(query.Properties()) == 0 {
 		buff.WriteString("Select ")
@@ -54,7 +54,7 @@ func (this *Statement) Query2Sql(query common.IQuery, typeName string) (string, 
 	return buff.String(), true
 }
 
-func expression(exp common.IExpression, typeName string) (bool, string) {
+func expression(exp ifs.IExpression, typeName string) (bool, string) {
 	if isNil(exp) {
 		return false, ""
 	}
@@ -80,7 +80,7 @@ func expression(exp common.IExpression, typeName string) (bool, string) {
 	return condOK || nextOK, buff.String()
 }
 
-func condition(cond common.ICondition, typeName string) (bool, string) {
+func condition(cond ifs.ICondition, typeName string) (bool, string) {
 	if isNil(cond) {
 		return false, ""
 	}
@@ -97,7 +97,7 @@ func condition(cond common.ICondition, typeName string) (bool, string) {
 	return okCond || okNext, result.String()
 }
 
-func comparator(comp common.IComparator, typeName string) (bool, string) {
+func comparator(comp ifs.IComparator, typeName string) (bool, string) {
 	if isNil(comp) {
 		return false, ""
 	}

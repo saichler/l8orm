@@ -2,7 +2,7 @@ package stmt
 
 import (
 	"database/sql"
-	"github.com/saichler/shared/go/share/strings"
+	"github.com/saichler/l8utils/go/utils/strings"
 	"strconv"
 )
 

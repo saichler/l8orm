@@ -11,9 +11,9 @@ import (
 	. "github.com/saichler/l8test/go/infra/t_topology"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/serializer/go/serialize/object"
-	. "github.com/saichler/types/go/common"
-	"github.com/saichler/types/go/testtypes"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	. "github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 )
 

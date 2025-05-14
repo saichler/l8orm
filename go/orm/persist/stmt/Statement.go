@@ -3,10 +3,10 @@ package stmt
 import (
 	"database/sql"
 	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/serializer/go/serialize/object"
-	"github.com/saichler/shared/go/share/strings"
-	"github.com/saichler/types/go/common"
-	types2 "github.com/saichler/types/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8utils/go/utils/strings"
+	"github.com/saichler/l8types/go/ifs"
+	types2 "github.com/saichler/l8types/go/types"
 	"reflect"
 )
 
@@ -14,15 +14,15 @@ type Statement struct {
 	fields  []string
 	values  map[string]int
 	columns map[string]int32
-	registy common.IRegistry
+	registy ifs.IRegistry
 	node    *types2.RNode
-	query   common.IQuery
+	query   ifs.IQuery
 
 	insertStmt *sql.Stmt
 	selectStmt *sql.Stmt
 }
 
-func NewStatement(node *types2.RNode, columns map[string]int32, query common.IQuery, registy common.IRegistry) *Statement {
+func NewStatement(node *types2.RNode, columns map[string]int32, query ifs.IQuery, registy ifs.IRegistry) *Statement {
 	return &Statement{node: node, columns: columns, registy: registy, query: query}
 }
 
@@ -61,7 +61,7 @@ func fieldsOf(node *types2.RNode) ([]string, map[string]int) {
 	return fields, values
 }
 
-func getValueForPostgres(data []byte, r common.IRegistry) (interface{}, error) {
+func getValueForPostgres(data []byte, r ifs.IRegistry) (interface{}, error) {
 	obj := object.NewDecode(data, 0, r)
 	val, err := obj.Get()
 	if err != nil {

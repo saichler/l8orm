@@ -6,7 +6,7 @@ import (
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist/stmt"
 	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/types/go/common"
+	"github.com/saichler/l8types/go/ifs"
 )
 
 func (this *Postgres) Write(data *types.RelationalData) error {
@@ -72,7 +72,7 @@ func (this *Postgres) writeData(data *types.RelationalData) error {
 	return nil
 }
 
-func (this *Postgres) WriteObjects(elems common.IElements, resources common.IResources) error {
+func (this *Postgres) WriteObjects(elems ifs.IElements, resources ifs.IResources) error {
 	relData := convert.ConvertTo(elems, resources)
 	if relData.Error() != nil {
 		return relData.Error()

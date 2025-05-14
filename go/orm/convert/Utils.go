@@ -3,13 +3,13 @@ package convert
 import (
 	"errors"
 	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/types/go/common"
-	types2 "github.com/saichler/types/go/types"
+	"github.com/saichler/l8types/go/ifs"
+	types2 "github.com/saichler/l8types/go/types"
 	"strings"
 	"sync"
 )
 
-func NewRelationsDataForQuery(query common.IQuery) (*types.RelationalData, error) {
+func NewRelationsDataForQuery(query ifs.IQuery) (*types.RelationalData, error) {
 	rlData := &types.RelationalData{}
 	rlData.RootTypeName = query.RootType().TypeName
 	rlData.Tables = make(map[string]*types.Table)
@@ -23,7 +23,7 @@ func NewRelationsDataForQuery(query common.IQuery) (*types.RelationalData, error
 	return rlData, err
 }
 
-func NewRelationalDataForType(typeName string, introspector common.IIntrospector) (*types.RelationalData, error) {
+func NewRelationalDataForType(typeName string, introspector ifs.IIntrospector) (*types.RelationalData, error) {
 	node, ok := introspector.NodeByTypeName(typeName)
 	if !ok {
 		return nil, errors.New("Did not find any node for " + typeName)

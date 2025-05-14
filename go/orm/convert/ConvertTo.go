@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/reflect/go/reflect/helping"
-	"github.com/saichler/serializer/go/serialize/object"
-	"github.com/saichler/shared/go/share/strings"
-	"github.com/saichler/types/go/common"
-	types2 "github.com/saichler/types/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8utils/go/utils/strings"
+	"github.com/saichler/l8types/go/ifs"
+	types2 "github.com/saichler/l8types/go/types"
 	"reflect"
 	"strconv"
 )
 
-func ConvertTo(objects common.IElements, res common.IResources) common.IElements {
+func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
 	if objects == nil {
 		return nil
 	}
@@ -68,7 +68,7 @@ func TypeOf(v reflect.Value) string {
 	panic("Unknown type: " + v.Type().Name())
 }
 
-func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode, data *types.RelationalData, res common.IResources) error {
+func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode, data *types.RelationalData, res ifs.IResources) error {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
@@ -171,7 +171,7 @@ func SetValueToRow(row *types.Row, col int32, val reflect.Value) error {
 	return nil
 }
 
-func RecKey(node *types2.RNode, value reflect.Value, myKey string, reg common.IRegistry) string {
+func RecKey(node *types2.RNode, value reflect.Value, myKey string, reg ifs.IRegistry) string {
 	key := helping.PrimaryDecorator(node, value, reg)
 	if key == nil {
 		str := strings.New(node.FieldName)

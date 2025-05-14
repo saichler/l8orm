@@ -10,9 +10,9 @@ import (
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/serializer/go/serialize/object"
-	"github.com/saichler/types/go/common"
-	"github.com/saichler/types/go/testtypes"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 )
 
@@ -22,7 +22,7 @@ func TestPostgres(t *testing.T) {
 
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
-	res, _ := CreateResources(25000, 1, common.Info_Level)
+	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	node, _ := res.Introspector().Inspect(before1)
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
@@ -94,7 +94,7 @@ func TestPostgres(t *testing.T) {
 }
 
 func TestPostgresFields(t *testing.T) {
-	res, _ := CreateResources(25000, 1, common.Info_Level)
+	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	ok, db, p := writeRecords(100, res, t)
 	defer cleanup(db)
 	if !ok {
@@ -134,7 +134,7 @@ func TestPostgresFields(t *testing.T) {
 }
 
 func TestPostgresCriteria(t *testing.T) {
-	res, _ := CreateResources(25000, 1, common.Info_Level)
+	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	ok, db, p := writeRecords(100, res, t)
 	defer cleanup(db)
 	if !ok {

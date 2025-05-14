@@ -8,13 +8,13 @@ import (
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/types/go/common"
-	"github.com/saichler/types/go/testtypes"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 	"time"
 )
 
-func TestPostgresServicePoint(t *testing.T) {
+func TestPostgresService(t *testing.T) {
 	db := openDBConection()
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
@@ -29,13 +29,13 @@ func TestPostgresServicePoint(t *testing.T) {
 	serviceName := "postgres"
 	p := persist.NewPostgres(db, eg2.Resources())
 
-	eg2.Resources().ServicePoints().AddServicePointType(&persist.OrmServicePoint{})
-	eg2.Resources().ServicePoints().Activate(persist.ServicePointType, serviceName, 0, eg2.Resources(), eg2, p)
+	eg2.Resources().Services().RegisterServiceHandlerType(&persist.OrmService{})
+	eg2.Resources().Services().Activate(persist.ServiceType, serviceName, 0, eg2.Resources(), eg2, p)
 
 	time.Sleep(time.Second)
 
 	hc := health.Health(eg2.Resources())
-	hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)
+	hp := hc.Health(eg2.Resources().SysConfig().LocalUuid)
 	sv, ok := hp.Services.ServiceToAreas[serviceName]
 	if !ok {
 		Log.Fail(t, "Orm service is missing")
@@ -50,13 +50,13 @@ func TestPostgresServicePoint(t *testing.T) {
 	before := utils.CreateTestModelInstance(5)
 	eg1.Resources().Registry().Register(before)
 
-	elems := eg1.SingleRequest(serviceName, 0, common.POST, before)
+	elems := eg1.SingleRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
 	}
 
-	elems = eg1.SingleRequest(serviceName, 0, common.GET, "select * from TestProto")
+	elems = eg1.SingleRequest(serviceName, 0, ifs.GET, "select * from TestProto")
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -78,7 +78,7 @@ func TestPostgresServicePoint(t *testing.T) {
 	}
 }
 
-func TestPostgresServicePointReplication(t *testing.T) {
+func TestPostgresServiceReplication(t *testing.T) {
 	db := openDBConection()
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
@@ -95,8 +95,8 @@ func TestPostgresServicePointReplication(t *testing.T) {
 
 		p := persist.NewPostgres(db, eg2.Resources())
 
-		eg2.Resources().ServicePoints().AddServicePointType(&persist.OrmServicePoint{})
-		eg2.Resources().ServicePoints().Activate(persist.ServicePointType, serviceName, 0, eg2.Resources(), eg2, p)
+		eg2.Resources().Services().RegisterServiceHandlerType(&persist.OrmService{})
+		eg2.Resources().Services().Activate(persist.ServiceType, serviceName, 0, eg2.Resources(), eg2, p)
 	}
 
 	time.Sleep(time.Second * 2)
@@ -109,7 +109,7 @@ func TestPostgresServicePointReplication(t *testing.T) {
 			destination = eg2.Resources().SysConfig().LocalUuid
 		}
 		hc := health.Health(eg2.Resources())
-		hp := hc.HealthPoint(eg2.Resources().SysConfig().LocalUuid)
+		hp := hc.Health(eg2.Resources().SysConfig().LocalUuid)
 		sv, ok := hp.Services.ServiceToAreas[serviceName]
 		if !ok {
 			Log.Fail(t, "Orm service is missing")
@@ -126,7 +126,7 @@ func TestPostgresServicePointReplication(t *testing.T) {
 	eg1.Resources().Registry().Register(before)
 
 	Log.Info("Post")
-	elems := eg1.SingleRequest(serviceName, 0, common.POST, before)
+	elems := eg1.SingleRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -136,14 +136,14 @@ func TestPostgresServicePointReplication(t *testing.T) {
 
 	Log.Info("First")
 
-	elems = eg1.SingleRequest(serviceName, 0, common.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.SingleRequest(serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
 
 	Log.Info("Second")
 
-	elems = eg1.Request(destination, serviceName, 0, common.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
@@ -151,7 +151,7 @@ func TestPostgresServicePointReplication(t *testing.T) {
 	before = utils.CreateTestModelInstance(8)
 
 	Log.Info("Post 2")
-	elems = eg1.SingleRequest(serviceName, 0, common.POST, before)
+	elems = eg1.SingleRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -160,11 +160,11 @@ func TestPostgresServicePointReplication(t *testing.T) {
 	time.Sleep(time.Second)
 
 	Log.Info("Third")
-	elems = eg1.Request(destination, serviceName, 0, common.GET, "select * from TestProto")
+	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto")
 	fmt.Println(len(elems.Elements()))
 }
 
-func checkResponse(elems common.IElements, resources common.IResources, before *testtypes.TestProto, t *testing.T) bool {
+func checkResponse(elems ifs.IElements, resources ifs.IResources, before *testtypes.TestProto, t *testing.T) bool {
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return false

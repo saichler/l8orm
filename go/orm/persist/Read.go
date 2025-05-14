@@ -6,12 +6,12 @@ import (
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist/stmt"
 	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/serializer/go/serialize/object"
-	"github.com/saichler/types/go/common"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8types/go/ifs"
 	"strings"
 )
 
-func (this *Postgres) Read(query common.IQuery) (*types.RelationalData, error) {
+func (this *Postgres) Read(query ifs.IQuery) (*types.RelationalData, error) {
 	data, err := convert.NewRelationsDataForQuery(query)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*ty
 	return result, nil
 }
 
-func (this *Postgres) ReadObjects(q common.IQuery, resources common.IResources) common.IElements {
+func (this *Postgres) ReadObjects(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
 	relData, err := this.Read(q)
 	if err != nil {
 		return object.NewError(err.Error())
