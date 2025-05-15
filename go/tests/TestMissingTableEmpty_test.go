@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/saichler/l8orm/go/orm/persist"
 	. "github.com/saichler/l8test/go/infra/t_resources"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"github.com/saichler/layer8/go/overlay/health"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 	"time"
 )
@@ -32,7 +32,7 @@ func TestMissingTableEmpty(t *testing.T) {
 		p := persist.NewPostgres(db, eg2.Resources())
 
 		eg2.Resources().Services().RegisterServiceHandlerType(&persist.OrmService{})
-		eg2.Resources().Services().Activate(persist.ServiceType, serviceName, 0, eg2.Resources(), eg2, p)
+		eg2.Resources().Services().Activate(persist.ServiceType, serviceName, 0, eg2.Resources(), eg2, p, &testtypes.TestProto{})
 	}
 
 	time.Sleep(time.Second * 2)
