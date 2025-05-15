@@ -31,6 +31,8 @@ func (this *OrmService) Activate(serviceName string, serviceArea uint16,
 	this.elem = args[1].(proto.Message)
 	r.Registry().Register(&types.RelationalData{})
 	r.Registry().Register(&types2.Query{})
+	this.serviceName = serviceName
+	this.serviceArea = serviceArea
 	return nil
 }
 
