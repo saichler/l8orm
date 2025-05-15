@@ -1,6 +1,7 @@
 package persist
 
 import (
+	"fmt"
 	common2 "github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
@@ -112,6 +113,7 @@ func (this *OrmService) KeyOf(elements ifs.IElements, resources ifs.IResources) 
 }
 
 func (this *OrmService) WebService() ifs.IWebService {
+	fmt.Println("Web Service ", this.serviceName, " ", this.serviceArea)
 	return web.New(this.serviceName, this.serviceArea,
 		nil, nil,
 		nil, nil,
