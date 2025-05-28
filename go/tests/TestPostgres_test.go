@@ -6,13 +6,13 @@ import (
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist"
 	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
 	. "github.com/saichler/l8test/go/infra/t_resources"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/l8srlz/go/serialize/object"
-	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 )
 
@@ -74,7 +74,7 @@ func TestPostgres(t *testing.T) {
 		}
 	}
 
-	upd := updating.NewUpdater(res.Introspector(), true, true)
+	upd := updating.NewUpdater(res, true, true)
 	upd.Update(before1, after1)
 	if len(upd.Changes()) > 0 {
 		for _, chg := range upd.Changes() {
@@ -85,7 +85,7 @@ func TestPostgres(t *testing.T) {
 		return
 	}
 
-	upd = updating.NewUpdater(res.Introspector(), true, true)
+	upd = updating.NewUpdater(res, true, true)
 	upd.Update(before2, after2)
 	if len(upd.Changes()) > 0 {
 		Log.Fail(t, "Expected no changes in instance 2")

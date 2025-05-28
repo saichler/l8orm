@@ -64,7 +64,7 @@ func TestPostgresService(t *testing.T) {
 
 	after := elems.Element().(*testtypes.TestProto)
 
-	upd := updating.NewUpdater(eg1.Resources().Introspector(), false, false)
+	upd := updating.NewUpdater(eg1.Resources(), false, false)
 
 	err := upd.Update(before, after)
 	if err != nil {
@@ -170,7 +170,7 @@ func checkResponse(elems ifs.IElements, resources ifs.IResources, before *testty
 		return false
 	}
 	after := elems.Element().(*testtypes.TestProto)
-	upd := updating.NewUpdater(resources.Introspector(), false, false)
+	upd := updating.NewUpdater(resources, false, false)
 	err := upd.Update(before, after)
 	if err != nil {
 		Log.Fail(t, "failed updating:", err.Error())

@@ -3,13 +3,13 @@ package tests
 import (
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
 	. "github.com/saichler/l8test/go/infra/t_resources"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"github.com/saichler/l8srlz/go/serialize/object"
-	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8types/go/testtypes"
 	"testing"
 )
 
@@ -44,7 +44,7 @@ func TestConvert(t *testing.T) {
 
 	after := resp.Element().(*testtypes.TestProto)
 
-	upd := updating.NewUpdater(res.Introspector(), false, false)
+	upd := updating.NewUpdater(res, false, false)
 	err := upd.Update(before, after)
 	if err != nil {
 		Log.Fail(t, err)
@@ -93,7 +93,7 @@ func TestConvertMultiValue(t *testing.T) {
 
 	after := resp.Element().(*testtypes.TestProto)
 
-	upd := updating.NewUpdater(res.Introspector(), false, false)
+	upd := updating.NewUpdater(res, false, false)
 	err := upd.Update(before1, after)
 	if err != nil {
 		Log.Fail(t, err)
@@ -146,7 +146,7 @@ func TestConvertMultiValueNoKey(t *testing.T) {
 		}
 	}
 
-	upd := updating.NewUpdater(res.Introspector(), false, false)
+	upd := updating.NewUpdater(res, false, false)
 	err := upd.Update(before1, after)
 	if err != nil {
 		Log.Fail(t, err)
