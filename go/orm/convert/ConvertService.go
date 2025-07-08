@@ -13,7 +13,7 @@ const (
 type ConvertService struct {
 }
 
-func (this *ConvertService) Activate(serviceName string, serviceArea uint16,
+func (this *ConvertService) Activate(serviceName string, serviceArea byte,
 	r ifs.IResources, l ifs.IServiceCacheListener, args ...interface{}) error {
 	r.Registry().Register(&types.RelationalData{})
 	return nil
@@ -41,7 +41,7 @@ func (this *ConvertService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements 
 func (this *ConvertService) GetCopy(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
-func (this *ConvertService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg ifs.IMessage) ifs.IElements {
+func (this *ConvertService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg *ifs.Message) ifs.IElements {
 	return nil
 }
 

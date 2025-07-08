@@ -20,11 +20,11 @@ const (
 type OrmService struct {
 	orm         common2.IORM
 	serviceName string
-	serviceArea uint16
+	serviceArea byte
 	elem        proto.Message
 }
 
-func (this *OrmService) Activate(serviceName string, serviceArea uint16,
+func (this *OrmService) Activate(serviceName string, serviceArea byte,
 	r ifs.IResources, l ifs.IServiceCacheListener, args ...interface{}) error {
 	r.Logger().Info("ORM Activated for ", serviceName, " area ", serviceArea)
 	this.orm = args[0].(common2.IORM)
@@ -76,7 +76,7 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 func (this *OrmService) GetCopy(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
-func (this *OrmService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg ifs.IMessage) ifs.IElements {
+func (this *OrmService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg *ifs.Message) ifs.IElements {
 	return nil
 }
 

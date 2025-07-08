@@ -15,6 +15,7 @@ import (
 )
 
 func TestPostgresService(t *testing.T) {
+	time.Sleep(time.Second * 2)
 	db := openDBConection()
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
