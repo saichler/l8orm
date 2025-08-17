@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L8ORM - Distributed Object-Relational Mapping</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .hero {
+            padding: 120px 0 80px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .cta-button:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .section:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .architecture-diagram {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .installation-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .step {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .step h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">L8ORM</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#api">API</a></li>
+                <li><a href="#documentation">Docs</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="container">
+            <h1>L8ORM</h1>
+            <p>Distributed Object-Relational Mapping service built on the Layer8 networking framework. Designed for modern distributed applications with built-in PostgreSQL support and automatic object conversion.</p>
+            <a href="#installation" class="cta-button">Get Started</a>
+        </div>
+    </section>
+
+    <section id="features" class="section">
+        <div class="container">
+            <h2>Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Distributed Architecture</h3>
+                    <p>Horizontally and vertically scalable ORM service designed for high-performance distributed systems.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Layer8 Integration</h3>
+                    <p>Built on the Layer8 networking framework for reliable distributed communication and service management.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🐘</div>
+                    <h3>PostgreSQL Support</h3>
+                    <p>Native PostgreSQL database integration with optimized query execution and connection management.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Object Conversion</h3>
+                    <p>Automatic conversion between Go objects and relational data structures with type safety.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Protocol Buffers</h3>
+                    <p>Uses protobuf for efficient data serialization and cross-language compatibility.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Transaction Support</h3>
+                    <p>Built-in transaction management with replication capabilities for data consistency.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Web Service Integration</h3>
+                    <p>REST API support through integrated web services for external access and integration.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Pluggable Design</h3>
+                    <p>Modular architecture allowing custom database implementations and service extensions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="architecture" class="section">
+        <div class="container">
+            <h2>Architecture Overview</h2>
+            <div class="architecture-diagram">
+                <h3>Core Components</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    <li style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                        <strong>ORM Interface (IORM):</strong> Core interface for read/write operations
+                    </li>
+                    <li style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                        <strong>Convert Service:</strong> Handles object-to-relational data conversion
+                    </li>
+                    <li style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                        <strong>Persist Service:</strong> Manages database persistence operations
+                    </li>
+                    <li style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                        <strong>Statement Builder:</strong> SQL statement generation and query building
+                    </li>
+                    <li style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                        <strong>Web Service Layer:</strong> REST API endpoints for external access
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="installation" class="section">
+        <div class="container">
+            <h2>Installation & Setup</h2>
+            
+            <div class="installation-steps">
+                <div class="step">
+                    <h4>1. Install Package</h4>
+                    <div class="code-block">
+                        <pre>go get github.com/saichler/l8orm/go</pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <h4>2. Setup PostgreSQL</h4>
+                    <div class="code-block">
+                        <pre># Start PostgreSQL
+./scripts/start-postgres.sh
+
+# Stop PostgreSQL
+./scripts/stop-postgres.sh</pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <h4>3. Generate Proto Bindings</h4>
+                    <div class="code-block">
+                        <pre>cd proto
+./make-bindings.sh</pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <h4>4. Run Tests</h4>
+                    <div class="code-block">
+                        <pre>cd go
+./test.sh</pre>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Basic Usage</h3>
+            <div class="code-block">
+                <pre>package main
+
+import (
+    "github.com/saichler/l8orm/go/orm/common"
+    "github.com/saichler/l8orm/go/orm/persist"
+)
+
+func main() {
+    // Initialize ORM service
+    ormService := &persist.OrmService{}
+    
+    // Database operations
+    data, err := orm.Read(query)
+    err = orm.Write(relationalData)
+    
+    // Object operations
+    elements := orm.ReadObjects(query, resources)
+    err = orm.WriteObjects(elements, resources)
+}</pre>
+            </div>
+        </div>
+    </section>
+
+    <section id="api" class="section">
+        <div class="container">
+            <h2>API Reference</h2>
+            
+            <h3>Core IORM Interface</h3>
+            <div class="code-block">
+                <pre>type IORM interface {
+    Read(ifs.IQuery) (*types.RelationalData, error)
+    Write(*types.RelationalData) error
+    ReadObjects(ifs.IQuery, ifs.IResources) ifs.IElements
+    WriteObjects(ifs.IElements, ifs.IResources) error
+    Close() error
+}</pre>
+            </div>
+
+            <h3>Data Structures</h3>
+            <p>The ORM uses Protocol Buffer definitions for data structures:</p>
+            <ul style="margin: 1rem 0 1rem 2rem;">
+                <li><strong>RelationalData:</strong> Root container for table data</li>
+                <li><strong>Table:</strong> Represents database tables with columns and rows</li>
+                <li><strong>Row:</strong> Individual record with column values</li>
+                <li><strong>InstanceRows:</strong> Grouped rows by instance</li>
+                <li><strong>AttributeRows:</strong> Grouped rows by attribute</li>
+            </ul>
+
+            <h3>Dependencies</h3>
+            <ul style="margin: 1rem 0 1rem 2rem;">
+                <li><strong>PostgreSQL Driver:</strong> github.com/lib/pq</li>
+                <li><strong>Protocol Buffers:</strong> google.golang.org/protobuf</li>
+                <li><strong>Layer8 Framework:</strong> github.com/saichler/layer8</li>
+                <li><strong>Additional Utilities:</strong> Various saichler packages for serialization, types, and utilities</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="documentation" class="section">
+        <div class="container">
+            <h2>Documentation & Support</h2>
+            
+            <div style="text-align: center;">
+                <h3>Contributing</h3>
+                <p style="margin: 1rem 0;">We welcome contributions! Follow these steps:</p>
+                <ol style="text-align: left; max-width: 600px; margin: 2rem auto;">
+                    <li>Fork the repository</li>
+                    <li>Create a feature branch</li>
+                    <li>Make your changes</li>
+                    <li>Add tests for new functionality</li>
+                    <li>Run the test suite</li>
+                    <li>Submit a pull request</li>
+                </ol>
+
+                <h3 style="margin-top: 3rem;">License</h3>
+                <p>This project is licensed under the Apache License 2.0.</p>
+                
+                <div style="margin-top: 3rem;">
+                    <a href="https://github.com/saichler/l8orm" class="cta-button" style="margin: 0 1rem;">View on GitHub</a>
+                    <a href="#installation" class="cta-button" style="background: #28a745; margin: 0 1rem;">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/saichler/l8orm">GitHub</a>
+                <a href="#api">API Docs</a>
+                <a href="#installation">Installation</a>
+                <a href="#features">Features</a>
+            </div>
+            <p>&copy; 2024 L8ORM. Licensed under Apache License 2.0.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                const headerOffset = 80;
+                const elementPosition = target.offsetTop;
+                const offsetPosition = elementPosition - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+    </script>
+</body>
+</html>
