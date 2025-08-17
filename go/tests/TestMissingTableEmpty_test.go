@@ -67,7 +67,7 @@ func TestMissingTableEmpty(t *testing.T) {
 	eg1.Resources().Registry().Register(before)
 
 	Log.Info("Post")
-	elems := eg1.SingleRequest(serviceName, 0, ifs.POST, before)
+	elems := eg1.ProximityRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -77,7 +77,7 @@ func TestMissingTableEmpty(t *testing.T) {
 
 	Log.Info("First")
 
-	elems = eg1.SingleRequest(serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.ProximityRequest(serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
@@ -95,7 +95,7 @@ func TestMissingTableEmpty(t *testing.T) {
 	}
 
 	Log.Info("Post 2")
-	elems = eg1.SingleRequest(serviceName, 0, ifs.POST, before)
+	elems = eg1.ProximityRequest(serviceName, 0, ifs.POST, before)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
