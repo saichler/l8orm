@@ -2,11 +2,12 @@ package convert
 
 import (
 	"errors"
+	"strings"
+	"sync"
+
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8types/go/ifs"
 	types2 "github.com/saichler/l8types/go/types"
-	"strings"
-	"sync"
 )
 
 func NewRelationsDataForQuery(query ifs.IQuery) (*types.RelationalData, error) {

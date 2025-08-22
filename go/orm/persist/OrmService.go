@@ -2,6 +2,8 @@ package persist
 
 import (
 	"fmt"
+	"reflect"
+
 	common2 "github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
@@ -10,7 +12,6 @@ import (
 	"github.com/saichler/l8utils/go/utils/web"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"google.golang.org/protobuf/proto"
-	"reflect"
 )
 
 const (
@@ -67,6 +68,31 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
 func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
+	// in case the pb is an instance of the element and not a query.
+	ins, ok := pb.Element().(proto.Message)
+	if ok {
+		aside := reflect.ValueOf(ins).Elem().Type().Name()
+		bside := reflect.ValueOf(this.elem).Elem().Type().Name()
+		if aside == bside {
+			rnode, ok := vnic.Resources().Introspector().NodeByTypeName(bside)
+			if ok {
+				fields := introspecting.PrimaryKeyDecorator(rnode).([]string)
+				v := reflect.ValueOf(aside).FieldByName(fields[0])
+				gsql := "select * from " + bside + " where " + fields[0] + "=" + v.String()
+				q1, err := object.NewQuery(gsql, vnic.Resources())
+				if err == nil {
+					panic(err)
+				}
+				q2, err := q1.Query(vnic.Resources())
+				if err == nil {
+					panic(err)
+				}
+				return this.orm.ReadObjects(q2, vnic.Resources())
+			}
+		}
+	}
+
+	// This is a query
 	query, err := pb.Query(vnic.Resources())
 	if err != nil {
 		return object.NewError(err.Error())
