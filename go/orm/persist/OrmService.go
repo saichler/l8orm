@@ -77,8 +77,9 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 			rnode, ok := vnic.Resources().Introspector().NodeByTypeName(bside)
 			if ok {
 				fields := introspecting.PrimaryKeyDecorator(rnode).([]string)
-				v := reflect.ValueOf(ins).FieldByName(fields[0])
+				v := reflect.ValueOf(ins).Elem().FieldByName(fields[0])
 				gsql := "select * from " + bside + " where " + fields[0] + "=" + v.String()
+				vnic.Resources().Logger().Info("Constructed Query is: ", gsql)
 				q1, err := object.NewQuery(gsql, vnic.Resources())
 				if err == nil {
 					panic(err)
