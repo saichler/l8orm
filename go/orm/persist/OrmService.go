@@ -88,7 +88,11 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 				if err != nil {
 					panic(gsql + " " + err.Error())
 				}
-				return this.orm.ReadObjects(q2, vnic.Resources())
+				result := this.orm.ReadObjects(q2, vnic.Resources())
+				if result.Error() == nil {
+					return result
+				}
+				return pb
 			}
 		}
 	}
