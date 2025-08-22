@@ -81,12 +81,12 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 				gsql := "select * from " + bside + " where " + fields[0] + "=" + v.String()
 				vnic.Resources().Logger().Info("Constructed Query is: ", gsql)
 				q1, err := object.NewQuery(gsql, vnic.Resources())
-				if err == nil {
-					panic(err)
+				if err != nil {
+					panic(gsql + " " + err.Error())
 				}
 				q2, err := q1.Query(vnic.Resources())
-				if err == nil {
-					panic(err)
+				if err != nil {
+					panic(gsql + " " + err.Error())
 				}
 				return this.orm.ReadObjects(q2, vnic.Resources())
 			}
