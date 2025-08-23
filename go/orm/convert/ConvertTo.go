@@ -2,14 +2,15 @@ package convert
 
 import (
 	"bytes"
-	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/reflect/go/reflect/helping"
-	"github.com/saichler/l8srlz/go/serialize/object"
-	"github.com/saichler/l8utils/go/utils/strings"
-	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
 	"reflect"
 	"strconv"
+
+	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8types/go/ifs"
+	types2 "github.com/saichler/l8types/go/types"
+	"github.com/saichler/l8utils/go/utils/strings"
+	"github.com/saichler/reflect/go/reflect/helping"
 )
 
 func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
@@ -71,6 +72,10 @@ func TypeOf(v reflect.Value) string {
 func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode, data *types.RelationalData, res ifs.IResources) error {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
+	}
+
+	if !value.IsValid() {
+		return nil
 	}
 
 	table, attributeRows := TableAndRowsCreate(node, data, parentKey)
