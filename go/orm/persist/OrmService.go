@@ -62,7 +62,7 @@ func (this *OrmService) Put(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
 func (this *OrmService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return nil
+	return this.Post(pb, vnic)
 }
 func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
@@ -70,6 +70,7 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	// in case the pb is an instance of the element and not a query.
 	ins, ok := pb.Element().(proto.Message)
+
 	if ok {
 		aside := reflect.ValueOf(ins).Elem().Type().Name()
 		bside := reflect.ValueOf(this.elem).Elem().Type().Name()
