@@ -111,7 +111,7 @@ func (this *OrmService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg *ifs.Messag
 	return nil
 }
 
-func (this *OrmService) TransactionMethod() ifs.ITransactionMethod {
+func (this *OrmService) TransactionConfig() ifs.ITransactionConfig {
 	return this
 }
 
@@ -120,6 +120,9 @@ func (this *OrmService) Replication() bool {
 }
 func (this *OrmService) ReplicationCount() int {
 	return 2
+}
+func (this *OrmService) ConcurrentGets() bool {
+	return true
 }
 func (this *OrmService) KeyOf(elements ifs.IElements, resources ifs.IResources) string {
 	query, err := elements.Query(resources)

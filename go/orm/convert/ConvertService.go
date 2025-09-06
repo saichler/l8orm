@@ -45,7 +45,7 @@ func (this *ConvertService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg *ifs.Me
 	return nil
 }
 
-func (this *ConvertService) TransactionMethod() ifs.ITransactionMethod {
+func (this *ConvertService) TransactionConfig() ifs.ITransactionConfig {
 	return nil
 }
 

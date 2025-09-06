@@ -2,6 +2,9 @@ package tests
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/saichler/l8orm/go/orm/persist"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/l8types/go/ifs"
@@ -10,8 +13,6 @@ import (
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"testing"
-	"time"
 )
 
 func TestPostgresService(t *testing.T) {
@@ -51,13 +52,13 @@ func TestPostgresService(t *testing.T) {
 	before := utils.CreateTestModelInstance(5)
 	eg1.Resources().Registry().Register(before)
 
-	elems := eg1.ProximityRequest(serviceName, 0, ifs.POST, before)
+	elems := eg1.ProximityRequest(serviceName, 0, ifs.POST, before, 5)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
 	}
 
-	elems = eg1.ProximityRequest(serviceName, 0, ifs.GET, "select * from TestProto")
+	elems = eg1.ProximityRequest(serviceName, 0, ifs.GET, "select * from TestProto", 5)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -127,7 +128,7 @@ func TestPostgresServiceReplication(t *testing.T) {
 	eg1.Resources().Registry().Register(before)
 
 	Log.Info("Post")
-	elems := eg1.ProximityRequest(serviceName, 0, ifs.POST, before)
+	elems := eg1.ProximityRequest(serviceName, 0, ifs.POST, before, 5)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -137,14 +138,14 @@ func TestPostgresServiceReplication(t *testing.T) {
 
 	Log.Info("First")
 
-	elems = eg1.ProximityRequest(serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.ProximityRequest(serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString, 5)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
 
 	Log.Info("Second")
 
-	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString)
+	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto where MyString="+before.MyString, 5)
 	if !checkResponse(elems, eg1.Resources(), before, t) {
 		return
 	}
@@ -152,7 +153,7 @@ func TestPostgresServiceReplication(t *testing.T) {
 	before = utils.CreateTestModelInstance(8)
 
 	Log.Info("Post 2")
-	elems = eg1.ProximityRequest(serviceName, 0, ifs.POST, before)
+	elems = eg1.ProximityRequest(serviceName, 0, ifs.POST, before, 5)
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())
 		return
@@ -161,7 +162,7 @@ func TestPostgresServiceReplication(t *testing.T) {
 	time.Sleep(time.Second)
 
 	Log.Info("Third")
-	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto")
+	elems = eg1.Request(destination, serviceName, 0, ifs.GET, "select * from TestProto", 5)
 	fmt.Println(len(elems.Elements()))
 }
 

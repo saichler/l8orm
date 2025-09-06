@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"testing"
+
 	"github.com/saichler/l8orm/go/orm/convert"
 	types2 "github.com/saichler/l8orm/go/types"
 	. "github.com/saichler/l8test/go/infra/t_resources"
@@ -9,7 +11,6 @@ import (
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"github.com/saichler/reflect/go/reflect/updating"
 	"github.com/saichler/reflect/go/tests/utils"
-	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -25,7 +26,7 @@ func TestConvertService(t *testing.T) {
 
 	before := utils.CreateTestModelInstance(1)
 	nic2 := topo.VnicByVnetNum(1, 4)
-	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before)
+	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before, 5)
 	if resp.Error() == nil {
 		Log.Fail(t, "Expected an error as we did not register the type")
 		return
@@ -36,7 +37,7 @@ func TestConvertService(t *testing.T) {
 	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
 	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before, 5)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -48,7 +49,7 @@ func TestConvertService(t *testing.T) {
 		return
 	}
 
-	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.GET, rlData)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.GET, rlData, 5)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
 		return
@@ -79,7 +80,7 @@ func TestConvertServiceMulti(t *testing.T) {
 	//introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 	resp := nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST,
-		[]*testtypes.TestProto{before1, before2})
+		[]*testtypes.TestProto{before1, before2}, 5)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -96,7 +97,7 @@ func TestConvertServiceMulti(t *testing.T) {
 		return
 	}
 
-	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.GET, rlData)
+	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.GET, rlData, 5)
 	if resp.Error() != nil {
 		Log.Fail(t, resp.Error().Error())
 		return
