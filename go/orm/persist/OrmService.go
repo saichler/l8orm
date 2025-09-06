@@ -68,17 +68,16 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
 func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	// in case the pb is an instance of the element and not a query.
-	ins, ok := pb.Element().(proto.Message)
 
-	if ok {
-		aside := reflect.ValueOf(ins).Elem().Type().Name()
+	if pb.IsFilterMode() {
+		asideValue := reflect.ValueOf(pb.Element())
+		aside := asideValue.Elem().Type().Name()
 		bside := reflect.ValueOf(this.elem).Elem().Type().Name()
 		if aside == bside {
 			rnode, ok := vnic.Resources().Introspector().NodeByTypeName(bside)
 			if ok {
 				fields := introspecting.PrimaryKeyDecorator(rnode).([]string)
-				v := reflect.ValueOf(ins).Elem().FieldByName(fields[0])
+				v := asideValue.Elem().FieldByName(fields[0])
 				gsql := "select * from " + bside + " where " + fields[0] + "=" + v.String()
 				vnic.Resources().Logger().Info("Constructed Query is: ", gsql)
 				q1, err := object.NewQuery(gsql, vnic.Resources())
