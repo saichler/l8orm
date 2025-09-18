@@ -2,12 +2,13 @@ package stmt
 
 import (
 	"database/sql"
+	"reflect"
+
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
-	"github.com/saichler/l8utils/go/utils/strings"
 	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
-	"reflect"
+	"github.com/saichler/l8types/go/types/l8reflect"
+	"github.com/saichler/l8utils/go/utils/strings"
 )
 
 type Statement struct {
@@ -15,14 +16,14 @@ type Statement struct {
 	values  map[string]int
 	columns map[string]int32
 	registy ifs.IRegistry
-	node    *types2.RNode
+	node    *l8reflect.L8Node
 	query   ifs.IQuery
 
 	insertStmt *sql.Stmt
 	selectStmt *sql.Stmt
 }
 
-func NewStatement(node *types2.RNode, columns map[string]int32, query ifs.IQuery, registy ifs.IRegistry) *Statement {
+func NewStatement(node *l8reflect.L8Node, columns map[string]int32, query ifs.IQuery, registy ifs.IRegistry) *Statement {
 	return &Statement{node: node, columns: columns, registy: registy, query: query}
 }
 
@@ -46,7 +47,7 @@ func (this *Statement) RowValues(row *types.Row) ([]interface{}, error) {
 	return result, nil
 }
 
-func fieldsOf(node *types2.RNode) ([]string, map[string]int) {
+func fieldsOf(node *l8reflect.L8Node) ([]string, map[string]int) {
 	fields := []string{"ParentKey", "RecKey"}
 	values := map[string]int{"ParentKey": 1, "RecKey": 2}
 	index := 3

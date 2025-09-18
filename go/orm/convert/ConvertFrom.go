@@ -1,14 +1,15 @@
 package convert
 
 import (
-	"github.com/saichler/l8orm/go/types"
-	"github.com/saichler/l8srlz/go/serialize/object"
-	strings2 "github.com/saichler/l8utils/go/utils/strings"
-	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8srlz/go/serialize/object"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8reflect"
+	strings2 "github.com/saichler/l8utils/go/utils/strings"
 )
 
 func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
@@ -24,7 +25,7 @@ func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
 	return object.New(nil, resp)
 }
 
-func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalData, res ifs.IResources) (interface{}, error) {
+func convertFrom(node *l8reflect.L8Node, parentKey string, data *types.RelationalData, res ifs.IResources) (interface{}, error) {
 	table, attributeRows := TableAndRowsGet(node, data, parentKey)
 
 	//No data for this attribute
@@ -38,7 +39,7 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 	}
 
 	rows := make(map[string]interface{}, 0)
-	subTableAttributes := make(map[string]*types2.RNode)
+	subTableAttributes := make(map[string]*l8reflect.L8Node)
 	subAttributesFull := false
 	for _, row := range attributeRows.Rows {
 		instance, err := info.NewInstance()
@@ -94,7 +95,7 @@ func convertFrom(node *types2.RNode, parentKey string, data *types.RelationalDat
 	return rows, nil
 }
 
-func convertRowsToSlice(rows map[string]interface{}, node *types2.RNode, r ifs.IRegistry) (interface{}, error) {
+func convertRowsToSlice(rows map[string]interface{}, node *l8reflect.L8Node, r ifs.IRegistry) (interface{}, error) {
 	info, e := r.Info(node.TypeName)
 	if e != nil {
 		return nil, e
@@ -111,7 +112,7 @@ func convertRowsToSlice(rows map[string]interface{}, node *types2.RNode, r ifs.I
 	return slice.Interface(), nil
 }
 
-func convertRowsToMap(rows map[string]interface{}, node *types2.RNode, r ifs.IRegistry) (interface{}, error) {
+func convertRowsToMap(rows map[string]interface{}, node *l8reflect.L8Node, r ifs.IRegistry) (interface{}, error) {
 	valInfo, e := r.Info(node.TypeName)
 	if e != nil {
 		return nil, e
@@ -176,7 +177,7 @@ func SetValueFromSubTable(attrName string, value reflect.Value, i interface{}) {
 	fieldValue.Set(reflect.ValueOf(i))
 }
 
-func TableAndRowsGet(node *types2.RNode, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
+func TableAndRowsGet(node *l8reflect.L8Node, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
 	table := data.Tables[node.TypeName]
 	if table == nil {
 		return nil, nil

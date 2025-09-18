@@ -7,7 +7,7 @@ import (
 
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
+	"github.com/saichler/l8types/go/types/l8reflect"
 )
 
 func NewRelationsDataForQuery(query ifs.IQuery) (*types.RelationalData, error) {
@@ -36,7 +36,7 @@ func NewRelationalDataForType(typeName string, introspector ifs.IIntrospector) (
 	return rlData, err
 }
 
-func addTable(node *types2.RNode, rlData *types.RelationalData, properties ...string) error {
+func addTable(node *l8reflect.L8Node, rlData *types.RelationalData, properties ...string) error {
 	_, ok := rlData.Tables[node.TypeName]
 	if ok && properties == nil {
 		return nil
@@ -86,7 +86,7 @@ func addTable(node *types2.RNode, rlData *types.RelationalData, properties ...st
 var attributes = make(map[string]map[string]string)
 var mtx = &sync.RWMutex{}
 
-func getAttrName(property string, node *types2.RNode) (string, string) {
+func getAttrName(property string, node *l8reflect.L8Node) (string, string) {
 	var attrName string
 	var attrProp string
 	index := strings.Index(property, ".")
@@ -122,7 +122,7 @@ func getAttrName(property string, node *types2.RNode) (string, string) {
 	return attrName, attrProp
 }
 
-func SetColumns(table *types.Table, node *types2.RNode) {
+func SetColumns(table *types.Table, node *l8reflect.L8Node) {
 	if table.Columns == nil {
 		table.Columns = make(map[string]int32)
 		for attrName, attrNode := range node.Attributes {

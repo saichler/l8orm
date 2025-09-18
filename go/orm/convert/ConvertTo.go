@@ -8,7 +8,7 @@ import (
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
+	"github.com/saichler/l8types/go/types/l8reflect"
 	"github.com/saichler/l8utils/go/utils/strings"
 	"github.com/saichler/reflect/go/reflect/helping"
 )
@@ -69,7 +69,7 @@ func TypeOf(v reflect.Value) string {
 	panic("Unknown type: " + v.Type().Name())
 }
 
-func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode, data *types.RelationalData, res ifs.IResources) error {
+func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8Node, data *types.RelationalData, res ifs.IResources) error {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
@@ -86,7 +86,7 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode,
 	row.RecKey = RecKey(node, value, myKey, res.Registry())
 	row.ColumnValues = make(map[int32][]byte)
 
-	subTableAttributes := make(map[string]*types2.RNode)
+	subTableAttributes := make(map[string]*l8reflect.L8Node)
 	for attrName, attrNode := range node.Attributes {
 		if attrNode.IsStruct {
 			subTableAttributes[attrName] = attrNode
@@ -137,7 +137,7 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *types2.RNode,
 	return nil
 }
 
-func TableAndRowsCreate(node *types2.RNode, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
+func TableAndRowsCreate(node *l8reflect.L8Node, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
 	table, ok := data.Tables[node.TypeName]
 	if !ok {
 		table = &types.Table{}
@@ -176,7 +176,7 @@ func SetValueToRow(row *types.Row, col int32, val reflect.Value) error {
 	return nil
 }
 
-func RecKey(node *types2.RNode, value reflect.Value, myKey string, reg ifs.IRegistry) string {
+func RecKey(node *l8reflect.L8Node, value reflect.Value, myKey string, reg ifs.IRegistry) string {
 	key := helping.PrimaryDecorator(node, value, reg)
 	if key == nil {
 		str := strings.New(node.FieldName)

@@ -8,7 +8,7 @@ import (
 	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
+	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8utils/go/utils/web"
 	"github.com/saichler/reflect/go/reflect/introspecting"
 	"google.golang.org/protobuf/proto"
@@ -31,7 +31,7 @@ func (this *OrmService) Activate(serviceName string, serviceArea byte,
 	this.orm = args[0].(common2.IORM)
 	this.elem = args[1].(proto.Message)
 	r.Registry().Register(&types.RelationalData{})
-	r.Registry().Register(&types2.Query{})
+	r.Registry().Register(&l8api.L8Query{})
 	this.serviceName = serviceName
 	this.serviceArea = serviceArea
 	return nil
@@ -155,5 +155,5 @@ func (this *OrmService) WebService() ifs.IWebService {
 		nil, nil,
 		nil, nil,
 		nil, nil,
-		&types2.Query{}, this.elem)
+		&l8api.L8Query{}, this.elem)
 }

@@ -3,11 +3,12 @@ package persist
 import (
 	"database/sql"
 	"errors"
-	"github.com/saichler/l8utils/go/utils/strings"
-	"github.com/saichler/l8types/go/ifs"
-	types2 "github.com/saichler/l8types/go/types"
 	strings2 "strings"
 	"sync"
+
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8reflect"
+	"github.com/saichler/l8utils/go/utils/strings"
 )
 
 type Postgres struct {
@@ -21,7 +22,7 @@ func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 	return &Postgres{db: db, verifyed: make(map[string]bool), mtx: &sync.Mutex{}, res: resourcs}
 }
 
-func collectTables(node *types2.RNode, tables map[string]bool) {
+func collectTables(node *l8reflect.L8Node, tables map[string]bool) {
 	tables[node.TypeName] = true
 	if node.Attributes != nil {
 		for _, attr := range node.Attributes {
@@ -35,7 +36,7 @@ func collectTables(node *types2.RNode, tables map[string]bool) {
 	}
 }
 
-func (this *Postgres) verifyTables(rootNode *types2.RNode) error {
+func (this *Postgres) verifyTables(rootNode *l8reflect.L8Node) error {
 	tables := make(map[string]bool)
 	collectTables(rootNode, tables)
 	for tableName, _ := range tables {
@@ -82,7 +83,7 @@ func (this *Postgres) createTable(tableName string) error {
 	return err
 }
 
-func postgresTypeOf(node *types2.RNode) string {
+func postgresTypeOf(node *l8reflect.L8Node) string {
 	if node.IsMap || node.IsSlice {
 		return "text"
 	}

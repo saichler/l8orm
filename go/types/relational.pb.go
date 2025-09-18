@@ -379,7 +379,7 @@ var file_relational_proto_goTypes = []interface{}{
 	(*RelationalData)(nil), // 0: types.RelationalData
 	(*Table)(nil),          // 1: types.Table
 	(*InstanceRows)(nil),   // 2: types.InstanceRows
-	(*AttributeRows)(nil),  // 3: types.AttributeRows
+	(*AttributeRows)(nil),  // 3: l8poll.L8P_AttributeRows
 	(*Row)(nil),            // 4: types.Row
 	nil,                    // 5: types.RelationalData.TablesEntry
 	nil,                    // 6: types.Table.ColumnsEntry
@@ -392,11 +392,11 @@ var file_relational_proto_depIdxs = []int32{
 	6, // 1: types.Table.columns:type_name -> types.Table.ColumnsEntry
 	7, // 2: types.Table.instance_rows:type_name -> types.Table.InstanceRowsEntry
 	8, // 3: types.InstanceRows.attribute_rows:type_name -> types.InstanceRows.AttributeRowsEntry
-	4, // 4: types.AttributeRows.rows:type_name -> types.Row
+	4, // 4: l8poll.L8P_AttributeRows.rows:type_name -> types.Row
 	9, // 5: types.Row.column_values:type_name -> types.Row.ColumnValuesEntry
 	1, // 6: types.RelationalData.TablesEntry.value:type_name -> types.Table
 	2, // 7: types.Table.InstanceRowsEntry.value:type_name -> types.InstanceRows
-	3, // 8: types.InstanceRows.AttributeRowsEntry.value:type_name -> types.AttributeRows
+	3, // 8: types.InstanceRows.AttributeRowsEntry.value:type_name -> l8poll.L8P_AttributeRows
 	9, // [9:9] is the sub-list for method output_type
 	9, // [9:9] is the sub-list for method input_type
 	9, // [9:9] is the sub-list for extension type_name
