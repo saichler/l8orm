@@ -10,7 +10,7 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8utils/go/utils/web"
-	"github.com/saichler/reflect/go/reflect/introspecting"
+	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"google.golang.org/protobuf/proto"
 )
 

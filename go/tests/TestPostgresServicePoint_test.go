@@ -9,10 +9,10 @@ import (
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/testtypes"
-	"github.com/saichler/layer8/go/overlay/health"
-	"github.com/saichler/reflect/go/reflect/introspecting"
-	"github.com/saichler/reflect/go/reflect/updating"
-	"github.com/saichler/reflect/go/tests/utils"
+	"github.com/saichler/l8bus/go/overlay/health"
+	"github.com/saichler/l8reflect/go/reflect/introspecting"
+	"github.com/saichler/l8reflect/go/reflect/updating"
+	"github.com/saichler/l8reflect/go/tests/utils"
 )
 
 func TestPostgresService(t *testing.T) {
