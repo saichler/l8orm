@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L8ORM - Distributed Object-Relational Mapping</title>
+    <title>Layer 8 Distributed ORM as a Service</title>
     <style>
         * {
             margin: 0;
@@ -15,7 +15,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #2d3748 100%);
+            overflow-x: hidden;
         }
 
         .container {
@@ -44,7 +45,7 @@
         .logo {
             font-size: 2rem;
             font-weight: bold;
-            color: #667eea;
+            color: #4299e1;
         }
 
         .nav-links {
@@ -61,13 +62,61 @@
         }
 
         .nav-links a:hover {
-            color: #667eea;
+            color: #4299e1;
         }
 
         .hero {
-            padding: 120px 0 80px;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             color: white;
+            position: relative;
+            background: linear-gradient(135deg, #2c5282 0%, #2d3748 100%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23ffffff;stop-opacity:0.05" /><stop offset="100%" style="stop-color:%23ffffff;stop-opacity:0.1" /></linearGradient></defs><circle cx="100" cy="100" r="50" fill="url(%23grad)" /><circle cx="300" cy="200" r="30" fill="url(%23grad)" /><circle cx="500" cy="150" r="40" fill="url(%23grad)" /><circle cx="700" cy="300" r="35" fill="url(%23grad)" /><circle cx="800" cy="100" r="25" fill="url(%23grad)" /><circle cx="200" cy="400" r="45" fill="url(%23grad)" /><circle cx="600" cy="450" r="30" fill="url(%23grad)" /><circle cx="900" cy="400" r="40" fill="url(%23grad)" /></svg>') center/cover;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .parallax-container {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .parallax-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .parallax-background {
+            transform: translateZ(-1px) scale(2);
+        }
+
+        .parallax-midground {
+            transform: translateZ(-0.5px) scale(1.5);
+        }
+
+        .parallax-foreground {
+            transform: translateZ(0);
         }
 
         .hero h1 {
@@ -87,20 +136,37 @@
 
         .cta-button {
             display: inline-block;
-            background: #ff6b6b;
+            background: linear-gradient(45deg, #f56500, #ff8500);
             color: white;
             padding: 15px 30px;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 25px;
             font-weight: bold;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 4px 15px rgba(245, 101, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
         }
 
         .cta-button:hover {
-            background: #ff5252;
+            background: linear-gradient(45deg, #ff8500, #ffa500);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+            box-shadow: 0 6px 20px rgba(245, 101, 0, 0.6);
         }
 
         .section {
@@ -144,7 +210,7 @@
         }
 
         .feature-card h3 {
-            color: #667eea;
+            color: #4299e1;
             margin-bottom: 1rem;
         }
 
@@ -181,12 +247,12 @@
             background: white;
             padding: 1.5rem;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #4299e1;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
 
         .step h4 {
-            color: #667eea;
+            color: #4299e1;
             margin-bottom: 0.5rem;
         }
 
@@ -211,24 +277,77 @@
         }
 
         .footer-links a:hover {
-            color: #667eea;
+            color: #4299e1;
+        }
+
+        /* Additional animations and effects */
+        .section {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4299e1, transparent);
+            animation: scanline 3s ease-in-out infinite;
+        }
+
+        @keyframes scanline {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(66, 153, 225, 0.1), transparent, rgba(245, 101, 0, 0.1), transparent);
+            animation: rotate 10s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
             }
-            
+
             .hero h1 {
                 font-size: 2.5rem;
             }
-            
+
             .hero p {
                 font-size: 1.1rem;
             }
-            
+
             .features-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .parallax-background {
+                display: none;
             }
         }
     </style>
@@ -248,10 +367,43 @@
         </nav>
     </header>
 
-    <section id="home" class="hero">
-        <div class="container">
-            <h1>L8ORM</h1>
-            <p>Distributed Object-Relational Mapping service built on the Layer8 networking framework. Designed for modern distributed applications with built-in PostgreSQL support and automatic object conversion.</p>
+    <section id="home" class="hero parallax-container">
+        <div class="parallax-layer parallax-background">
+            <svg width="100%" height="100%" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="networkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#4299e1;stop-opacity:0.1" />
+                        <stop offset="100%" style="stop-color:#2d3748;stop-opacity:0.2" />
+                    </linearGradient>
+                </defs>
+                <!-- Network nodes illustration -->
+                <circle cx="200" cy="150" r="8" fill="#4299e1" opacity="0.6">
+                    <animate attributeName="r" values="8;12;8" dur="3s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="400" cy="200" r="6" fill="#f56500" opacity="0.7">
+                    <animate attributeName="r" values="6;10;6" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="600" cy="120" r="10" fill="#4299e1" opacity="0.5">
+                    <animate attributeName="r" values="10;14;10" dur="4s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="800" cy="180" r="7" fill="#f56500" opacity="0.6">
+                    <animate attributeName="r" values="7;11;7" dur="3.5s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Connection lines -->
+                <line x1="200" y1="150" x2="400" y2="200" stroke="#4299e1" stroke-width="2" opacity="0.3">
+                    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+                </line>
+                <line x1="400" y1="200" x2="600" y2="120" stroke="#4299e1" stroke-width="2" opacity="0.3">
+                    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2.5s" repeatCount="indefinite"/>
+                </line>
+                <line x1="600" y1="120" x2="800" y2="180" stroke="#4299e1" stroke-width="2" opacity="0.3">
+                    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/>
+                </line>
+            </svg>
+        </div>
+        <div class="parallax-layer parallax-foreground container">
+            <h1>Layer 8 Distributed ORM</h1>
+            <p>Comprehensive distributed Object-Relational Mapping service built on the Layer8 networking framework. Designed for modern distributed applications with advanced querying, PostgreSQL support, and automatic object conversion.</p>
             <a href="#installation" class="cta-button">Get Started</a>
         </div>
     </section>
@@ -261,14 +413,37 @@
             <h2>Key Features</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="15" cy="15" r="8" fill="#4299e1" opacity="0.8"/>
+                            <circle cx="45" cy="15" r="8" fill="#f56500" opacity="0.8"/>
+                            <circle cx="15" cy="45" r="8" fill="#4299e1" opacity="0.8"/>
+                            <circle cx="45" cy="45" r="8" fill="#f56500" opacity="0.8"/>
+                            <circle cx="30" cy="30" r="10" fill="#2d3748" opacity="0.9"/>
+                            <line x1="15" y1="15" x2="30" y2="30" stroke="#4299e1" stroke-width="2"/>
+                            <line x1="45" y1="15" x2="30" y2="30" stroke="#4299e1" stroke-width="2"/>
+                            <line x1="15" y1="45" x2="30" y2="30" stroke="#4299e1" stroke-width="2"/>
+                            <line x1="45" y1="45" x2="30" y2="30" stroke="#4299e1" stroke-width="2"/>
+                        </svg>
+                    </div>
                     <h3>Distributed Architecture</h3>
-                    <p>Horizontally and vertically scalable ORM service designed for high-performance distributed systems.</p>
+                    <p>Horizontally and vertically scalable ORM service with service mesh integration designed for high-performance distributed systems.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🔗</div>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="5" y="25" width="15" height="10" fill="#4299e1" rx="2"/>
+                            <rect x="40" y="25" width="15" height="10" fill="#f56500" rx="2"/>
+                            <rect x="22.5" y="15" width="15" height="10" fill="#2d3748" rx="2"/>
+                            <rect x="22.5" y="35" width="15" height="10" fill="#2d3748" rx="2"/>
+                            <line x1="20" y1="30" x2="22.5" y2="30" stroke="#4299e1" stroke-width="3"/>
+                            <line x1="37.5" y1="30" x2="40" y2="30" stroke="#4299e1" stroke-width="3"/>
+                            <line x1="30" y1="25" x2="30" y2="15" stroke="#4299e1" stroke-width="3"/>
+                            <line x1="30" y1="35" x2="30" y2="45" stroke="#4299e1" stroke-width="3"/>
+                        </svg>
+                    </div>
                     <h3>Layer8 Integration</h3>
-                    <p>Built on the Layer8 networking framework for reliable distributed communication and service management.</p>
+                    <p>Built on the Layer8 networking framework for reliable distributed communication, service discovery, and management.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🐘</div>
@@ -276,29 +451,70 @@
                     <p>Native PostgreSQL database integration with optimized query execution and connection management.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🔄</div>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="5" y="15" width="20" height="15" fill="#4299e1" rx="3" opacity="0.8"/>
+                            <rect x="35" y="30" width="20" height="15" fill="#f56500" rx="3" opacity="0.8"/>
+                            <path d="M25 22 L35 37" stroke="#2d3748" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+                            <path d="M35 37 L25 22" stroke="#2d3748" stroke-width="2" fill="none" opacity="0.6"/>
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#2d3748" />
+                                </marker>
+                            </defs>
+                        </svg>
+                    </div>
                     <h3>Object Conversion</h3>
-                    <p>Automatic conversion between Go objects and relational data structures with type safety.</p>
+                    <p>Automatic conversion between Go objects and relational data structures with advanced type safety and reflection.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="30,5 50,20 50,40 30,55 10,40 10,20" fill="#4299e1" opacity="0.8"/>
+                            <polygon points="30,15 40,22 40,38 30,45 20,38 20,22" fill="#f56500" opacity="0.9"/>
+                            <circle cx="30" cy="30" r="8" fill="#2d3748"/>
+                        </svg>
+                    </div>
                     <h3>Protocol Buffers</h3>
-                    <p>Uses protobuf for efficient data serialization and cross-language compatibility.</p>
+                    <p>Uses protobuf for efficient data serialization and cross-platform compatibility with optimized performance.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="10" y="20" width="40" height="20" fill="#4299e1" rx="5" opacity="0.7"/>
+                            <rect x="15" y="25" width="30" height="10" fill="#f56500" rx="3"/>
+                            <circle cx="50" cy="20" r="6" fill="#2d3748"/>
+                            <text x="30" y="33" text-anchor="middle" fill="white" font-size="8">ACID</text>
+                        </svg>
+                    </div>
                     <h3>Transaction Support</h3>
-                    <p>Built-in transaction management with replication capabilities for data consistency.</p>
+                    <p>Built-in transaction management with replication capabilities, ACID compliance, and timeout support.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
-                    <h3>Web Service Integration</h3>
-                    <p>REST API support through integrated web services for external access and integration.</p>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10,30 Q20,10 30,30 Q40,50 50,30" stroke="#4299e1" stroke-width="4" fill="none"/>
+                            <circle cx="15" cy="25" r="4" fill="#f56500"/>
+                            <circle cx="30" cy="30" r="5" fill="#2d3748"/>
+                            <circle cx="45" cy="35" r="4" fill="#f56500"/>
+                            <rect x="20" y="45" width="20" height="8" fill="#4299e1" rx="2"/>
+                        </svg>
+                    </div>
+                    <h3>Advanced Querying</h3>
+                    <p>Sophisticated query builder with filtering, timeout support, and query optimization for complex operations.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🔧</div>
-                    <h3>Pluggable Design</h3>
-                    <p>Modular architecture allowing custom database implementations and service extensions.</p>
+                    <div class="feature-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="5" y="10" width="12" height="40" fill="#4299e1" rx="2"/>
+                            <rect x="24" y="15" width="12" height="35" fill="#f56500" rx="2"/>
+                            <rect x="43" y="20" width="12" height="30" fill="#2d3748" rx="2"/>
+                            <line x1="11" y1="5" x2="30" y2="5" stroke="#4299e1" stroke-width="2"/>
+                            <line x1="30" y1="10" x2="49" y2="10" stroke="#4299e1" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Service Bus Integration</h3>
+                    <p>Built-in support for l8bus messaging, event-driven architecture, and service mesh communication.</p>
                 </div>
             </div>
         </div>
@@ -367,6 +583,17 @@
                 </div>
             </div>
 
+            <h3>Latest Updates (2025)</h3>
+            <div style="background: linear-gradient(135deg, #4299e1, #f56500); padding: 2rem; border-radius: 10px; color: white; margin: 2rem 0;">
+                <h4 style="margin-bottom: 1rem;">Recent Improvements:</h4>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 5px;">✨ Enhanced Interface Support: Improved interface handling and type conversion</li>
+                    <li style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 5px;">⏱️ Timeout Functionality: Added timeout support for long-running operations</li>
+                    <li style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 5px;">🔍 Filter Mode: Advanced filtering capabilities for query optimization</li>
+                    <li style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 5px;">🛡️ Crash Prevention: Enhanced error handling and stability improvements</li>
+                </ul>
+            </div>
+
             <h3>Basic Usage</h3>
             <div class="code-block">
                 <pre>package main
@@ -379,12 +606,12 @@ import (
 func main() {
     // Initialize ORM service
     ormService := &persist.OrmService{}
-    
-    // Database operations
+
+    // Database operations with timeout
     data, err := orm.Read(query)
     err = orm.Write(relationalData)
-    
-    // Object operations
+
+    // Object operations with advanced filtering
     elements := orm.ReadObjects(query, resources)
     err = orm.WriteObjects(elements, resources)
 }</pre>
@@ -418,12 +645,34 @@ func main() {
             </ul>
 
             <h3>Dependencies</h3>
-            <ul style="margin: 1rem 0 1rem 2rem;">
-                <li><strong>PostgreSQL Driver:</strong> github.com/lib/pq</li>
-                <li><strong>Protocol Buffers:</strong> google.golang.org/protobuf</li>
-                <li><strong>Layer8 Framework:</strong> github.com/saichler/layer8</li>
-                <li><strong>Additional Utilities:</strong> Various saichler packages for serialization, types, and utilities</li>
-            </ul>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #4299e1;">
+                    <strong style="color: #4299e1;">Core Dependencies</strong>
+                    <ul style="list-style: none; padding: 0; margin: 0.5rem 0;">
+                        <li>💾 PostgreSQL Driver: github.com/lib/pq v1.10.9</li>
+                        <li>📦 Protocol Buffers: google.golang.org/protobuf v1.36.9</li>
+                        <li>🆔 UUID: github.com/google/uuid v1.6.0</li>
+                    </ul>
+                </div>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #f56500;">
+                    <strong style="color: #f56500;">Layer8 Framework</strong>
+                    <ul style="list-style: none; padding: 0; margin: 0.5rem 0;">
+                        <li>🚌 Bus: github.com/saichler/l8bus</li>
+                        <li>🔍 Query: github.com/saichler/l8ql</li>
+                        <li>🪞 Reflection: github.com/saichler/l8reflect</li>
+                        <li>📦 Serialization: github.com/saichler/l8srlz</li>
+                    </ul>
+                </div>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #2d3748;">
+                    <strong style="color: #2d3748;">Support Libraries</strong>
+                    <ul style="list-style: none; padding: 0; margin: 0.5rem 0;">
+                        <li>📦 Types: github.com/saichler/l8types</li>
+                        <li>🔧 Utils: github.com/saichler/l8utils</li>
+                        <li>⚙️ Services: github.com/saichler/l8services</li>
+                        <li>🧪 Test: github.com/saichler/l8test</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -448,7 +697,7 @@ func main() {
                 
                 <div style="margin-top: 3rem;">
                     <a href="https://github.com/saichler/l8orm" class="cta-button" style="margin: 0 1rem;">View on GitHub</a>
-                    <a href="#installation" class="cta-button" style="background: #28a745; margin: 0 1rem;">Get Started</a>
+                    <a href="#installation" class="cta-button" style="background: linear-gradient(45deg, #4299e1, #2d3748); margin: 0 1rem;">Get Started</a>
                 </div>
             </div>
         </div>
@@ -491,6 +740,48 @@ func main() {
             } else {
                 header.style.background = 'rgba(255, 255, 255, 0.95)';
             }
+        });
+
+        // Parallax scrolling effect
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.5;
+            const parallaxBg = document.querySelector('.parallax-background');
+            if (parallaxBg) {
+                parallaxBg.style.transform = `translate3d(0, ${rate}px, 0)`;
+            }
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe feature cards
+        document.addEventListener('DOMContentLoaded', () => {
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+                observer.observe(card);
+            });
+
+            // Animate SVG elements
+            const svgElements = document.querySelectorAll('svg circle, svg rect, svg polygon');
+            svgElements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+            });
         });
     </script>
 </body>

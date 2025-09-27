@@ -1,17 +1,20 @@
-# L8ORM - Distributed Object-Relational Mapping
+# Layer 8 Distributed ORM as a Service
 
-A distributed, horizontally and vertically scalable ORM (Object-Relational Mapping) service built on the Layer8 networking framework. L8ORM provides a pluggable ORM solution designed for modern distributed applications with built-in support for PostgreSQL and automatic object conversion.
+A distributed, horizontally and vertically scalable ORM (Object-Relational Mapping) service built on the Layer8 networking framework. L8ORM provides a comprehensive ORM solution designed for modern distributed applications with built-in support for PostgreSQL, automatic object conversion, and advanced querying capabilities.
 
 ## Features
 
-- **Distributed Architecture**: Horizontally and vertically scalable ORM service
-- **Layer8 Integration**: Built on the Layer8 networking framework for reliable distributed communication
-- **PostgreSQL Support**: Native PostgreSQL database integration
-- **Object Conversion**: Automatic conversion between Go objects and relational data structures
-- **Protocol Buffers**: Uses protobuf for efficient data serialization
-- **Transaction Support**: Built-in transaction management with replication capabilities
-- **Web Service Integration**: REST API support through integrated web services
-- **Pluggable Design**: Modular architecture allowing custom database implementations
+- **Distributed Architecture**: Horizontally and vertically scalable ORM service with service mesh integration
+- **Layer8 Integration**: Built on the Layer8 networking framework for reliable distributed communication and service discovery
+- **PostgreSQL Support**: Native PostgreSQL database integration with connection pooling and optimization
+- **Object Conversion**: Automatic conversion between Go objects and relational data structures with type safety
+- **Protocol Buffers**: Uses protobuf for efficient data serialization and cross-platform compatibility
+- **Transaction Support**: Built-in transaction management with replication capabilities and ACID compliance
+- **Advanced Querying**: Sophisticated query builder with filtering, timeout support, and query optimization
+- **Web Service Integration**: REST API support through integrated web services for external access
+- **Pluggable Design**: Modular architecture allowing custom database implementations and service extensions
+- **Service Bus Integration**: Built-in support for l8bus messaging and event-driven architecture
+- **Reflection Utilities**: Advanced reflection capabilities for dynamic object handling and conversion
 
 ## Architecture
 
@@ -75,14 +78,14 @@ Use the provided scripts to manage PostgreSQL:
 ./scripts/stop-postgres.sh
 ```
 
-### Protocol Buffers
+### Latest Updates (2025)
 
-Generate Go bindings from proto files:
-
-```bash
-cd proto
-./make-bindings.sh
-```
+Recent improvements include:
+- **Enhanced Interface Support**: Improved interface handling and type conversion
+- **Timeout Functionality**: Added timeout support for long-running operations
+- **Filter Mode**: Advanced filtering capabilities for query optimization
+- **Crash Prevention**: Enhanced error handling and stability improvements
+- **Repository Updates**: Updated repository structure and dependencies
 
 ## Testing
 
@@ -101,10 +104,16 @@ The project includes comprehensive tests for:
 
 ## Dependencies
 
-- **PostgreSQL Driver**: `github.com/lib/pq`
-- **Protocol Buffers**: `google.golang.org/protobuf`
-- **Layer8 Framework**: `github.com/saichler/layer8`
-- **Additional Utilities**: Various saichler packages for serialization, types, and utilities
+- **PostgreSQL Driver**: `github.com/lib/pq` v1.10.9
+- **Protocol Buffers**: `google.golang.org/protobuf` v1.36.9
+- **Layer8 Bus**: `github.com/saichler/l8bus` - Service mesh communication
+- **Layer8 Query Language**: `github.com/saichler/l8ql` - Advanced query capabilities
+- **Layer8 Reflection**: `github.com/saichler/l8reflect` - Dynamic object handling
+- **Layer8 Serialization**: `github.com/saichler/l8srlz` - Data serialization utilities
+- **Layer8 Types**: `github.com/saichler/l8types` - Common type definitions
+- **Layer8 Utils**: `github.com/saichler/l8utils` - General utilities
+- **Layer8 Services**: `github.com/saichler/l8services` - Service framework components
+- **UUID**: `github.com/google/uuid` v1.6.0 - Unique identifier generation
 
 ## API Reference
 
