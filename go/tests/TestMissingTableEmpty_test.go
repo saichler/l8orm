@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saichler/l8bus/go/overlay/health"
 	"github.com/saichler/l8orm/go/orm/persist"
+	"github.com/saichler/l8reflect/go/reflect/introspecting"
+	"github.com/saichler/l8reflect/go/tests/utils"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/testtypes"
-	"github.com/saichler/l8bus/go/overlay/health"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
-	"github.com/saichler/l8reflect/go/tests/utils"
 )
 
 func TestMissingTableEmpty(t *testing.T) {
@@ -31,9 +31,10 @@ func TestMissingTableEmpty(t *testing.T) {
 		introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 		p := persist.NewPostgres(db, eg2.Resources())
-
-		eg2.Resources().Services().RegisterServiceHandlerType(&persist.OrmService{})
-		eg2.Resources().Services().Activate(persist.ServiceType, serviceName, 0, eg2.Resources(), eg2, p, &testtypes.TestProto{})
+		sla := ifs.NewServiceLevelAgreement(&persist.OrmService{}, serviceName, 0, true, nil)
+		sla.SetServiceItem(&testtypes.TestProto{})
+		sla.SetArgs(p)
+		eg2.Resources().Services().Activate(sla, eg2)
 	}
 
 	time.Sleep(time.Second * 2)
@@ -45,8 +46,7 @@ func TestMissingTableEmpty(t *testing.T) {
 		if i == 4 {
 			destination = eg2.Resources().SysConfig().LocalUuid
 		}
-		hc := health.Health(eg2.Resources())
-		hp := hc.Health(eg2.Resources().SysConfig().LocalUuid)
+		hp := health.HealthOf(eg2.Resources().SysConfig().LocalUuid, eg2.Resources())
 		sv, ok := hp.Services.ServiceToAreas[serviceName]
 		if !ok {
 			Log.Fail(t, "Orm service is missing")

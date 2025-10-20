@@ -6,11 +6,11 @@ import (
 
 	common2 "github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8utils/go/utils/web"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -25,15 +25,14 @@ type OrmService struct {
 	elem        proto.Message
 }
 
-func (this *OrmService) Activate(serviceName string, serviceArea byte,
-	r ifs.IResources, l ifs.IServiceCacheListener, args ...interface{}) error {
-	r.Logger().Info("ORM Activated for ", serviceName, " area ", serviceArea)
-	this.orm = args[0].(common2.IORM)
-	this.elem = args[1].(proto.Message)
-	r.Registry().Register(&types.RelationalData{})
-	r.Registry().Register(&l8api.L8Query{})
-	this.serviceName = serviceName
-	this.serviceArea = serviceArea
+func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic) error {
+	vnic.Resources().Logger().Info("ORM Activated for ", sla.ServiceName(), " area ", sla.ServiceArea())
+	this.orm = sla.Args()[0].(common2.IORM)
+	this.elem = sla.ServiceItem().(proto.Message)
+	vnic.Resources().Registry().Register(&types.RelationalData{})
+	vnic.Resources().Registry().Register(&l8api.L8Query{})
+	this.serviceName = sla.ServiceName()
+	this.serviceArea = sla.ServiceArea()
 	return nil
 }
 
@@ -121,7 +120,7 @@ func (this *OrmService) Replication() bool {
 func (this *OrmService) ReplicationCount() int {
 	return 2
 }
-func (this *OrmService) ConcurrentGets() bool {
+func (this *OrmService) Voter() bool {
 	return true
 }
 func (this *OrmService) KeyOf(elements ifs.IElements, resources ifs.IResources) string {

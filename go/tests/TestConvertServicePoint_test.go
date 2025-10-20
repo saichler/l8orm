@@ -5,12 +5,12 @@ import (
 
 	"github.com/saichler/l8orm/go/orm/convert"
 	types2 "github.com/saichler/l8orm/go/types"
-	. "github.com/saichler/l8test/go/infra/t_resources"
-	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8types/go/testtypes"
 	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"github.com/saichler/l8reflect/go/reflect/updating"
 	"github.com/saichler/l8reflect/go/tests/utils"
+	. "github.com/saichler/l8test/go/infra/t_resources"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/testtypes"
 )
 
 func TestMain(m *testing.M) {
@@ -21,8 +21,8 @@ func TestMain(m *testing.M) {
 
 func TestConvertService(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	nic.Resources().Services().RegisterServiceHandlerType(&convert.ConvertService{})
-	nic.Resources().Services().Activate(convert.ServiceType, convert.ServiceName, 0, nic.Resources(), nic)
+	sla := ifs.NewServiceLevelAgreement(&convert.ConvertService{}, convert.ServiceName, 0, false, nil)
+	nic.Resources().Services().Activate(sla, nic)
 
 	before := utils.CreateTestModelInstance(1)
 	nic2 := topo.VnicByVnetNum(1, 4)
@@ -67,8 +67,8 @@ func TestConvertService(t *testing.T) {
 
 func TestConvertServiceMulti(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	nic.Resources().Services().RegisterServiceHandlerType(&convert.ConvertService{})
-	nic.Resources().Services().Activate(convert.ServiceType, convert.ServiceName, 0, nic.Resources(), nic)
+	sla := ifs.NewServiceLevelAgreement(&convert.ConvertService{}, convert.ServiceName, 0, false, nil)
+	nic.Resources().Services().Activate(sla, nic)
 
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)

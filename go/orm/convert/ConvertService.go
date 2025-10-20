@@ -13,9 +13,8 @@ const (
 type ConvertService struct {
 }
 
-func (this *ConvertService) Activate(serviceName string, serviceArea byte,
-	r ifs.IResources, l ifs.IServiceCacheListener, args ...interface{}) error {
-	r.Registry().Register(&types.RelationalData{})
+func (this *ConvertService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic) error {
+	vnic.Resources().Registry().Register(&types.RelationalData{})
 	return nil
 }
 
