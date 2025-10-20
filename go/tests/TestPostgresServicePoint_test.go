@@ -22,17 +22,19 @@ func TestPostgresService(t *testing.T) {
 	eg1 := topo.VnicByVnetNum(1, 2)
 	eg2 := topo.VnicByVnetNum(2, 2)
 
-	node, _ := eg1.Resources().Introspector().Inspect(&testtypes.TestProto{})
-	introspecting.AddPrimaryKeyDecorator(node, "MyString")
+	/*
+		node, _ := eg1.Resources().Introspector().Inspect(&testtypes.TestProto{})
+		introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
-	node, _ = eg2.Resources().Introspector().Inspect(&testtypes.TestProto{})
-	introspecting.AddPrimaryKeyDecorator(node, "MyString")
-
+		node, _ = eg2.Resources().Introspector().Inspect(&testtypes.TestProto{})
+		introspecting.AddPrimaryKeyDecorator(node, "MyString")
+	*/
 	serviceName := "postgres"
 	p := persist.NewPostgres(db, eg2.Resources())
 
 	sla := ifs.NewServiceLevelAgreement(&persist.OrmService{}, serviceName, 0, true, nil)
 	sla.SetServiceItem(&testtypes.TestProto{})
+	sla.SetPrimaryKeys("MyString")
 	sla.SetArgs(p)
 	eg2.Resources().Services().Activate(sla, eg2)
 
