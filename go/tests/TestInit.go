@@ -3,18 +3,18 @@ package tests
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+
 	_ "github.com/lib/pq"
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist"
 	"github.com/saichler/l8orm/go/types"
-	. "github.com/saichler/l8test/go/infra/t_resources"
-	. "github.com/saichler/l8test/go/infra/t_topology"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"github.com/saichler/l8reflect/go/tests/utils"
 	"github.com/saichler/l8srlz/go/serialize/object"
+	. "github.com/saichler/l8test/go/infra/t_resources"
+	. "github.com/saichler/l8test/go/infra/t_topology"
 	. "github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/testtypes"
-	"testing"
 )
 
 var topo *TestTopology
@@ -81,8 +81,6 @@ func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *persi
 	for i := 0; i < 100; i++ {
 		recs[i] = utils.CreateTestModelInstance(i)
 	}
-	node, _ := res.Introspector().Inspect(&testtypes.TestProto{})
-	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 	resp := convert.ConvertTo(object.New(nil, recs), res)
 	if resp != nil && resp.Error() != nil {

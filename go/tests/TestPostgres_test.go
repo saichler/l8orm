@@ -2,18 +2,18 @@ package tests
 
 import (
 	"fmt"
-	"github.com/saichler/l8ql/go/gsql/interpreter"
+	"testing"
+
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist"
 	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8ql/go/gsql/interpreter"
+	"github.com/saichler/l8reflect/go/reflect/updating"
+	"github.com/saichler/l8reflect/go/tests/utils"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/testtypes"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
-	"github.com/saichler/l8reflect/go/reflect/updating"
-	"github.com/saichler/l8reflect/go/tests/utils"
-	"testing"
 )
 
 func TestPostgres(t *testing.T) {
@@ -23,8 +23,6 @@ func TestPostgres(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
-	node, _ := res.Introspector().Inspect(before1)
-	introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
 	resp := convert.ConvertTo(object.New(nil, []*testtypes.TestProto{before1, before2}), res)
 	if resp != nil && resp.Error() != nil {

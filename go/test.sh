@@ -12,12 +12,9 @@ rm -rf vendor
 go mod init
 GOPROXY=direct GOPRIVATE=github.com go mod tidy
 go mod vendor
-cp ./vendor/github.com/saichler/l8utils/go/utils/resources/build-test-security.sh .
-chmod +x ./build-test-security.sh
-rm -rf vendor
-./build-test-security.sh
-rm -rf ./build-test-security.sh
-go mod vendor
+
+echo "About to run tests"
+read -n 1 -s -r -p "Press any key to continue..."
 
 # Run unit tests with coverage
 ../scripts/stop-postgres.sh

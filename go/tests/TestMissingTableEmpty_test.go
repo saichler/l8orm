@@ -7,7 +7,6 @@ import (
 
 	"github.com/saichler/l8bus/go/overlay/health"
 	"github.com/saichler/l8orm/go/orm/persist"
-	"github.com/saichler/l8reflect/go/reflect/introspecting"
 	"github.com/saichler/l8reflect/go/tests/utils"
 	. "github.com/saichler/l8test/go/infra/t_resources"
 	"github.com/saichler/l8types/go/ifs"
@@ -20,21 +19,12 @@ func TestMissingTableEmpty(t *testing.T) {
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
 
-	node, _ := eg1.Resources().Introspector().Inspect(&testtypes.TestProto{})
-	introspecting.AddPrimaryKeyDecorator(node, "MyString")
-
 	serviceName := "postgres"
 
 	for i := 1; i <= 4; i++ {
 		eg2 := topo.VnicByVnetNum(2, i)
-		node, _ = eg2.Resources().Introspector().Inspect(&testtypes.TestProto{})
-		introspecting.AddPrimaryKeyDecorator(node, "MyString")
-
 		p := persist.NewPostgres(db, eg2.Resources())
-		sla := ifs.NewServiceLevelAgreement(&persist.OrmService{}, serviceName, 0, true, nil)
-		sla.SetServiceItem(&testtypes.TestProto{})
-		sla.SetArgs(p)
-		eg2.Resources().Services().Activate(sla, eg2)
+		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, "MyString")
 	}
 
 	time.Sleep(time.Second * 2)

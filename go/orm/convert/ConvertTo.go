@@ -10,7 +10,6 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8reflect"
 	"github.com/saichler/l8utils/go/utils/strings"
-	"github.com/saichler/l8reflect/go/reflect/helping"
 )
 
 func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
@@ -83,7 +82,7 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8N
 
 	row := &types.Row{}
 	row.ParentKey = parentKey
-	row.RecKey = RecKey(node, value, myKey, res.Registry())
+	row.RecKey = RecKey(node, value, myKey, res)
 	row.ColumnValues = make(map[int32][]byte)
 
 	subTableAttributes := make(map[string]*l8reflect.L8Node)
@@ -176,9 +175,9 @@ func SetValueToRow(row *types.Row, col int32, val reflect.Value) error {
 	return nil
 }
 
-func RecKey(node *l8reflect.L8Node, value reflect.Value, myKey string, reg ifs.IRegistry) string {
-	key := helping.PrimaryDecorator(node, value, reg)
-	if key == nil {
+func RecKey(node *l8reflect.L8Node, value reflect.Value, myKey string, res ifs.IResources) string {
+	key, _, _ := res.Introspector().Decorators().PrimaryKeyDecoratorFromValue(node, value)
+	if key == "" {
 		str := strings.New(node.FieldName)
 		str.Add("[")
 		str.Add(myKey)

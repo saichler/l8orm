@@ -7,7 +7,6 @@ import (
 
 const (
 	ServiceName = "Convert"
-	ServiceType = "ConvertService"
 )
 
 type ConvertService struct {
