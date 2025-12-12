@@ -13,8 +13,8 @@ type OrmService struct {
 }
 
 func Activate(serviceName string, serviceArea byte, item, itemList interface{},
-	vnic ifs.IVNic, orm common2.IORM, keys ...string) {
-	sla := ifs.NewServiceLevelAgreement(&OrmService{}, serviceName, serviceArea, false, nil)
+	vnic ifs.IVNic, orm common2.IORM, callback ifs.IServiceCallback, keys ...string) {
+	sla := ifs.NewServiceLevelAgreement(&OrmService{}, serviceName, serviceArea, false, callback)
 	sla.SetServiceItem(item)
 	sla.SetServiceItemList(itemList)
 	sla.SetPrimaryKeys(keys...)
@@ -59,7 +59,9 @@ func (this *OrmService) Post(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if ok {
 		err = this.orm.Write(relData)
 	} else {
+		this.Before(ifs.POST, pb, vnic)
 		err = this.orm.WriteObjects(pb, vnic.Resources())
+		this.After(ifs.POST, pb, vnic)
 	}
 	if err != nil {
 		return object.NewError(err.Error())
