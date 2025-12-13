@@ -49,6 +49,28 @@ func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, boo
 			buff.WriteString(" where ")
 			buff.WriteString(str)
 		}
+
+		// Add ORDER BY clause if SortBy is specified
+		if query.SortBy() != "" {
+			buff.WriteString(" ORDER BY ")
+			buff.WriteString(query.SortBy())
+			if query.Descending() {
+				buff.WriteString(" DESC")
+			} else {
+				buff.WriteString(" ASC")
+			}
+		}
+
+		// Add LIMIT clause if Limit is specified
+		if query.Limit() > 0 {
+			buff.WriteString(fmt.Sprintf(" LIMIT %d", query.Limit()))
+		}
+
+		// Add OFFSET clause for pagination (Page starts from 0)
+		if query.Page() > 0 && query.Limit() > 0 {
+			offset := query.Page() * query.Limit()
+			buff.WriteString(fmt.Sprintf(" OFFSET %d", offset))
+		}
 	}
 	fmt.Println(buff.String())
 	return buff.String(), true
