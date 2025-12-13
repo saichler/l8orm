@@ -16,7 +16,7 @@ import (
 func TestConvert(t *testing.T) {
 	before := utils.CreateTestModelInstance(1)
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
-	resp := convert.ConvertTo(object.New(nil, before), res)
+	resp := convert.ConvertTo(ifs.POST, object.New(nil, before), res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -58,7 +58,7 @@ func TestConvertMultiValue(t *testing.T) {
 	before2 := utils.CreateTestModelInstance(2)
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 
-	resp := convert.ConvertTo(object.New(nil, []*testtypes.TestProto{before1, before2}), res)
+	resp := convert.ConvertTo(ifs.POST, object.New(nil, []*testtypes.TestProto{before1, before2}), res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -105,7 +105,7 @@ func TestConvertMultiValueNoKey(t *testing.T) {
 	before2 := utils.CreateTestModelInstance(2)
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 
-	resp := convert.ConvertTo(object.New(nil, []*testtypes.TestProto{before1, before2}), res)
+	resp := convert.ConvertTo(ifs.POST, object.New(nil, []*testtypes.TestProto{before1, before2}), res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return

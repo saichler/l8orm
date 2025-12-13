@@ -82,7 +82,7 @@ func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *postg
 		recs[i] = utils.CreateTestModelInstance(i)
 	}
 
-	resp := convert.ConvertTo(object.New(nil, recs), res)
+	resp := convert.ConvertTo(POST, object.New(nil, recs), res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return false, nil, nil

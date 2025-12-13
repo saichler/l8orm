@@ -21,13 +21,14 @@ type Statement struct {
 
 	insertStmt *sql.Stmt
 	selectStmt *sql.Stmt
+	updateStmt *sql.Stmt
 }
 
 func NewStatement(node *l8reflect.L8Node, columns map[string]int32, query ifs.IQuery, registy ifs.IRegistry) *Statement {
 	return &Statement{node: node, columns: columns, registy: registy, query: query}
 }
 
-func (this *Statement) RowValues(row *l8orms.L8OrmRow) ([]interface{}, error) {
+func (this *Statement) RowValues(action ifs.Action, row *l8orms.L8OrmRow) ([]interface{}, error) {
 	result := make([]interface{}, len(this.values))
 	result[0] = row.ParentKey
 	result[1] = row.RecKey
@@ -37,14 +38,30 @@ func (this *Statement) RowValues(row *l8orms.L8OrmRow) ([]interface{}, error) {
 		}
 		fieldPos := this.values[attrName]
 		rowPos := this.columns[attrName]
-		data := row.ColumnValues[rowPos]
+		data, exists := row.ColumnValues[rowPos]
+		if !exists || len(data) == 0 {
+			result[fieldPos-1] = nil
+			continue
+		}
 		val, err := getValueForPostgres(data, this.registy)
 		if err != nil {
 			return nil, err
 		}
-		result[fieldPos-1] = val
+		if action == ifs.PATCH && isZeroValue(val) {
+			result[fieldPos-1] = nil
+		} else {
+			result[fieldPos-1] = val
+		}
 	}
 	return result, nil
+}
+
+func isZeroValue(val interface{}) bool {
+	if val == nil {
+		return true
+	}
+	v := reflect.ValueOf(val)
+	return v.IsZero()
 }
 
 func fieldsOf(node *l8reflect.L8Node) ([]string, map[string]int) {

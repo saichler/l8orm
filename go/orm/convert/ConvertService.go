@@ -22,13 +22,13 @@ func (this *ConvertService) DeActivate() error {
 }
 
 func (this *ConvertService) Post(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return ConvertTo(pb, vnic.Resources())
+	return ConvertTo(ifs.POST, pb, vnic.Resources())
 }
 func (this *ConvertService) Put(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
 func (this *ConvertService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return nil
+	return ConvertTo(ifs.PATCH, pb, vnic.Resources())
 }
 func (this *ConvertService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil

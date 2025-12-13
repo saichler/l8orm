@@ -50,18 +50,26 @@ func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) erro
 			return errors.New("No node was found for " + tableName)
 		}
 		statement := stmt.NewStatement(node, table.Columns, nil, this.res.Registry())
-		insert, err := statement.InsertStatement(tx)
+
+		var sqlStmt *sql.Stmt
+		var err error
+		if action == ifs.PATCH {
+			sqlStmt, err = statement.UpdateStatement(tx)
+		} else {
+			sqlStmt, err = statement.InsertStatement(tx)
+		}
 		if err != nil {
 			return err
 		}
+
 		for _, instRows := range table.InstanceRows {
 			for _, attrRows := range instRows.AttributeRows {
 				for _, row := range attrRows.Rows {
-					args, e := statement.RowValues(row)
+					args, e := statement.RowValues(action, row)
 					if e != nil {
 						return err
 					}
-					_, e = insert.Exec(args...)
+					_, e = sqlStmt.Exec(args...)
 					if e != nil {
 						return err
 					}
@@ -73,7 +81,7 @@ func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) erro
 }
 
 func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources ifs.IResources) error {
-	relData := convert.ConvertTo(elems, resources)
+	relData := convert.ConvertTo(action, elems, resources)
 	if relData.Error() != nil {
 		return relData.Error()
 	}

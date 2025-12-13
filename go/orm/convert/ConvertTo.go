@@ -12,7 +12,7 @@ import (
 	"github.com/saichler/l8utils/go/utils/strings"
 )
 
-func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
+func ConvertTo(action ifs.Action, objects ifs.IElements, res ifs.IResources) ifs.IElements {
 	if objects == nil {
 		return nil
 	}
@@ -35,7 +35,7 @@ func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
 	keys := objects.Keys()
 
 	if len(elements) == 1 {
-		err := convertTo(v, "", "", node, data, res)
+		err := convertTo(action, v, "", "", node, data, res)
 		if err != nil {
 			return object.NewError(err.Error())
 		}
@@ -48,7 +48,7 @@ func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
 			str := strings.New()
 			key = str.ToString(reflect.ValueOf(keys[i]))
 		}
-		err := convertTo(reflect.ValueOf(element), "", key, node, data, res)
+		err := convertTo(action, reflect.ValueOf(element), "", key, node, data, res)
 		if err != nil {
 			return object.NewError(err.Error())
 		}
@@ -68,7 +68,7 @@ func TypeOf(v reflect.Value) string {
 	panic("Unknown type: " + v.Type().Name())
 }
 
-func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8Node, data *l8orms.L8OrmRData, res ifs.IResources) error {
+func convertTo(action ifs.Action, value reflect.Value, parentKey, myKey string, node *l8reflect.L8Node, data *l8orms.L8OrmRData, res ifs.IResources) error {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
@@ -93,6 +93,10 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8N
 		}
 		fieldValue := value.FieldByName(attrName)
 		if fieldValue.IsValid() {
+			// For PATCH, skip zero/default values
+			if action == ifs.PATCH && fieldValue.IsZero() {
+				continue
+			}
 			col := table.Columns[attrName]
 			err := SetValueToRow(row, col, fieldValue)
 			if err != nil {
@@ -110,7 +114,7 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8N
 					mapValue := fieldValue.MapIndex(mapKey)
 					mapValueStr := strings.New()
 					mapValueStr.TypesPrefix = true
-					err := convertTo(mapValue, KeyForRow(row), mapValueStr.ToString(mapKey), attrNode, data, res)
+					err := convertTo(action, mapValue, KeyForRow(row), mapValueStr.ToString(mapKey), attrNode, data, res)
 					if err != nil {
 						return err
 					}
@@ -118,13 +122,13 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8N
 			} else if attrNode.IsSlice {
 				for i := 0; i < fieldValue.Len(); i++ {
 					sliceValue := fieldValue.Index(i)
-					err := convertTo(sliceValue, KeyForRow(row), strconv.Itoa(i), attrNode, data, res)
+					err := convertTo(action, sliceValue, KeyForRow(row), strconv.Itoa(i), attrNode, data, res)
 					if err != nil {
 						return err
 					}
 				}
 			} else {
-				err := convertTo(fieldValue, KeyForRow(row), "", attrNode, data, res)
+				err := convertTo(action, fieldValue, KeyForRow(row), "", attrNode, data, res)
 				if err != nil {
 					return err
 				}
