@@ -136,6 +136,7 @@ func (this *OrmService) KeyOf(elements ifs.IElements, resources ifs.IResources) 
 }
 
 func (this *OrmService) WebService() ifs.IWebService {
+	return this.sla.WebService()
 	/*
 		fmt.Println("Web Service ", this.serviceName, " ", this.serviceArea)
 		return web.New(this.serviceName, this.serviceArea,
