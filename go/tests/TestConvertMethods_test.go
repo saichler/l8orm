@@ -1,10 +1,10 @@
 package tests
 
 import (
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"testing"
 
 	"github.com/saichler/l8orm/go/orm/convert"
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8reflect/go/reflect/updating"
 	"github.com/saichler/l8reflect/go/tests/utils"
 	"github.com/saichler/l8srlz/go/serialize/object"
@@ -64,7 +64,7 @@ func TestConvertMultiValue(t *testing.T) {
 		return
 	}
 
-	r := resp.Element().(*types.RelationalData)
+	r := resp.Element().(*l8orms.L8OrmRData)
 
 	if len(r.Tables) != 3 {
 		Log.Fail(t, "Expected 3 tables")
@@ -111,7 +111,7 @@ func TestConvertMultiValueNoKey(t *testing.T) {
 		return
 	}
 
-	r := resp.Element().(*types.RelationalData)
+	r := resp.Element().(*l8orms.L8OrmRData)
 
 	if len(r.Tables) != 3 {
 		Log.Fail(t, "Expected 3 tables")

@@ -1,4 +1,4 @@
-package persist
+package postgres
 
 import (
 	"database/sql"

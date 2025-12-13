@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package l8orms;
+
+option java_multiple_files = true;
+option java_outer_classname = "L8Orms";
+option java_package = "com.l8orms.types";
+option go_package = "./types/l8orms";
+
+message L8OrmRData {
+  map<string, L8OrmTable> tables = 1;
+  string rootTypeName = 2;
+}
+
+message L8OrmTable {
+  string name = 1;
+  map<string, int32> columns = 2;
+  map<string, L8OrmInstanceRows> instance_rows = 3;
+}
+
+message L8OrmInstanceRows {
+  map<string, L8OrmAttributeRows> attribute_rows = 1;
+}
+
+message L8OrmAttributeRows {
+  repeated L8OrmRow rows = 1;
+}
+
+message L8OrmRow {
+  string parent_key = 1;
+  string rec_key = 2;
+  map<int32, bytes> column_values = 3;
+}

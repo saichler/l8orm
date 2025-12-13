@@ -1,11 +1,11 @@
 package convert
 
 import (
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8reflect"
@@ -13,7 +13,7 @@ import (
 )
 
 func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
-	data := o.Element().(*types.RelationalData)
+	data := o.Element().(*l8orms.L8OrmRData)
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
 		return object.NewError("No node for type " + data.RootTypeName)
@@ -25,7 +25,7 @@ func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
 	return object.New(nil, resp)
 }
 
-func convertFrom(node *l8reflect.L8Node, parentKey string, data *types.RelationalData, res ifs.IResources) (interface{}, error) {
+func convertFrom(node *l8reflect.L8Node, parentKey string, data *l8orms.L8OrmRData, res ifs.IResources) (interface{}, error) {
 	table, attributeRows := TableAndRowsGet(node, data, parentKey)
 
 	//No data for this attribute
@@ -147,7 +147,7 @@ func GetSliceIndex(sliceKey string) (int, error) {
 	return index, e
 }
 
-func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *types.Row, r ifs.IRegistry) error {
+func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *l8orms.L8OrmRow, r ifs.IRegistry) error {
 	fieldValue := value.FieldByName(attrName)
 	data := row.ColumnValues[colIndex]
 	if data == nil || len(data) == 0 {
@@ -177,7 +177,7 @@ func SetValueFromSubTable(attrName string, value reflect.Value, i interface{}) {
 	fieldValue.Set(reflect.ValueOf(i))
 }
 
-func TableAndRowsGet(node *l8reflect.L8Node, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
+func TableAndRowsGet(node *l8reflect.L8Node, data *l8orms.L8OrmRData, parentKey string) (*l8orms.L8OrmTable, *l8orms.L8OrmAttributeRows) {
 	table := data.Tables[node.TypeName]
 	if table == nil {
 		return nil, nil

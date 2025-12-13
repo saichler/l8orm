@@ -1,19 +1,19 @@
 package persist
 
 import (
-	common2 "github.com/saichler/l8orm/go/orm/common"
-	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8orm/go/orm/common"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 )
 
 type OrmService struct {
-	orm common2.IORM
+	orm common.IORM
 	sla *ifs.ServiceLevelAgreement
 }
 
 func Activate(serviceName string, serviceArea byte, item, itemList interface{},
-	vnic ifs.IVNic, orm common2.IORM, callback ifs.IServiceCallback, keys ...string) {
+	vnic ifs.IVNic, orm common.IORM, callback ifs.IServiceCallback, keys ...string) {
 	sla := ifs.NewServiceLevelAgreement(&OrmService{}, serviceName, serviceArea, false, callback)
 	sla.SetServiceItem(item)
 	sla.SetServiceItemList(itemList)
@@ -25,8 +25,8 @@ func Activate(serviceName string, serviceArea byte, item, itemList interface{},
 func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic) error {
 	vnic.Resources().Logger().Info("ORM Activated for ", sla.ServiceName(), " area ", sla.ServiceArea())
 	this.sla = sla
-	this.orm = this.sla.Args()[0].(common2.IORM)
-	_, err := vnic.Resources().Registry().Register(&types.RelationalData{})
+	this.orm = this.sla.Args()[0].(common.IORM)
+	_, err := vnic.Resources().Registry().Register(&l8orms.L8OrmRData{})
 	if err != nil {
 		return err
 	}
@@ -54,26 +54,14 @@ func (this *OrmService) DeActivate() error {
 }
 
 func (this *OrmService) Post(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	relData, ok := pb.Element().(*types.RelationalData)
-	var err error
-	if ok {
-		err = this.orm.Write(relData)
-	} else {
-		this.Before(ifs.POST, pb, vnic)
-		err = this.orm.WriteObjects(pb, vnic.Resources())
-		this.After(ifs.POST, pb, vnic)
-	}
-	if err != nil {
-		return object.NewError(err.Error())
-	}
-	return object.New(nil, nil)
+	return this.do(ifs.POST, pb, vnic)
 }
 
 func (this *OrmService) Put(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return nil
+	return this.do(ifs.PUT, pb, vnic)
 }
 func (this *OrmService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return this.Post(pb, vnic)
+	return this.do(ifs.PATCH, pb, vnic)
 }
 func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
@@ -85,12 +73,11 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 		if e != nil {
 			return object.NewError(e.Error())
 		}
-		result := this.orm.ReadObjects(q, vnic.Resources())
+		result := this.orm.Read(q, vnic.Resources())
 		if result.Error() == nil {
 			return result
 		}
 		return pb
-
 	}
 
 	// This is a query
@@ -98,7 +85,7 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if err != nil {
 		return object.NewError(err.Error())
 	}
-	return this.orm.ReadObjects(query, vnic.Resources())
+	return this.orm.Read(query, vnic.Resources())
 }
 func (this *OrmService) GetCopy(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil

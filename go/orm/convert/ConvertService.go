@@ -1,7 +1,7 @@
 package convert
 
 import (
-	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8types/go/ifs"
 )
 
@@ -13,7 +13,7 @@ type ConvertService struct {
 }
 
 func (this *ConvertService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic) error {
-	vnic.Resources().Registry().Register(&types.RelationalData{})
+	vnic.Resources().Registry().Register(&l8orms.L8OrmRData{})
 	return nil
 }
 

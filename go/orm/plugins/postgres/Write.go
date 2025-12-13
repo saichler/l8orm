@@ -1,15 +1,15 @@
-package persist
+package postgres
 
 import (
 	"database/sql"
 	"errors"
 	"github.com/saichler/l8orm/go/orm/convert"
-	"github.com/saichler/l8orm/go/orm/persist/stmt"
-	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8orm/go/orm/stmt"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8types/go/ifs"
 )
 
-func (this *Postgres) Write(data *types.RelationalData) error {
+func (this *Postgres) WriteRelational(action ifs.Action, data *l8orms.L8OrmRData) error {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
 	rootNode, ok := this.res.Introspector().NodeByTypeName(data.RootTypeName)
@@ -20,14 +20,14 @@ func (this *Postgres) Write(data *types.RelationalData) error {
 	if err != nil {
 		return err
 	}
-	err = this.writeData(data)
+	err = this.writeData(action, data)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (this *Postgres) writeData(data *types.RelationalData) error {
+func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) error {
 	var tx *sql.Tx
 	var er error
 
@@ -72,10 +72,10 @@ func (this *Postgres) writeData(data *types.RelationalData) error {
 	return nil
 }
 
-func (this *Postgres) WriteObjects(elems ifs.IElements, resources ifs.IResources) error {
+func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources ifs.IResources) error {
 	relData := convert.ConvertTo(elems, resources)
 	if relData.Error() != nil {
 		return relData.Error()
 	}
-	return this.Write(relData.Element().(*types.RelationalData))
+	return this.WriteRelational(action, relData.Element().(*l8orms.L8OrmRData))
 }

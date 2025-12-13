@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/saichler/l8orm/go/orm/convert"
-	types2 "github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8reflect/go/reflect/updating"
 	"github.com/saichler/l8reflect/go/tests/utils"
 	. "github.com/saichler/l8test/go/infra/t_resources"

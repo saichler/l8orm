@@ -6,7 +6,6 @@ import (
 
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/persist"
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8ql/go/gsql/interpreter"
 	"github.com/saichler/l8reflect/go/reflect/updating"
 	"github.com/saichler/l8reflect/go/tests/utils"

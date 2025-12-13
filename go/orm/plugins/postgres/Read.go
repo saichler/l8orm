@@ -1,17 +1,17 @@
-package persist
+package postgres
 
 import (
 	"database/sql"
 	"errors"
 	"github.com/saichler/l8orm/go/orm/convert"
-	"github.com/saichler/l8orm/go/orm/persist/stmt"
-	"github.com/saichler/l8orm/go/types"
+	"github.com/saichler/l8orm/go/orm/stmt"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"strings"
 )
 
-func (this *Postgres) Read(query ifs.IQuery) (*types.RelationalData, error) {
+func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, error) {
 	data, err := convert.NewRelationsDataForQuery(query)
 	if err != nil {
 		return nil, err
@@ -60,19 +60,19 @@ func (this *Postgres) Read(query ifs.IQuery) (*types.RelationalData, error) {
 		for _, row := range dataRow {
 			fldName := nameOfField(row.RecKey)
 			if table.InstanceRows == nil {
-				table.InstanceRows = make(map[string]*types.InstanceRows)
+				table.InstanceRows = make(map[string]*l8orms.L8OrmInstanceRows)
 			}
 			if table.InstanceRows[row.ParentKey] == nil {
-				table.InstanceRows[row.ParentKey] = &types.InstanceRows{}
+				table.InstanceRows[row.ParentKey] = &l8orms.L8OrmInstanceRows{}
 			}
 			if table.InstanceRows[row.ParentKey].AttributeRows == nil {
-				table.InstanceRows[row.ParentKey].AttributeRows = make(map[string]*types.AttributeRows)
+				table.InstanceRows[row.ParentKey].AttributeRows = make(map[string]*l8orms.L8OrmAttributeRows)
 			}
 			if table.InstanceRows[row.ParentKey].AttributeRows[fldName] == nil {
-				table.InstanceRows[row.ParentKey].AttributeRows[fldName] = &types.AttributeRows{}
+				table.InstanceRows[row.ParentKey].AttributeRows[fldName] = &l8orms.L8OrmAttributeRows{}
 			}
 			if table.InstanceRows[row.ParentKey].AttributeRows[fldName].Rows == nil {
-				table.InstanceRows[row.ParentKey].AttributeRows[fldName].Rows = make([]*types.Row, 0)
+				table.InstanceRows[row.ParentKey].AttributeRows[fldName].Rows = make([]*l8orms.L8OrmRow, 0)
 			}
 			attrRows := table.InstanceRows[row.ParentKey].AttributeRows[fldName]
 			attrRows.Rows = append(attrRows.Rows, row)
@@ -89,8 +89,8 @@ func nameOfField(recKey string) string {
 	return recKey[0:index]
 }
 
-func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*types.Row, error) {
-	result := make([]*types.Row, 0)
+func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8orms.L8OrmRow, error) {
+	result := make([]*l8orms.L8OrmRow, 0)
 	for rows.Next() {
 		row, err := statement.Row(rows)
 		if err != nil {
@@ -101,8 +101,8 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*ty
 	return result, nil
 }
 
-func (this *Postgres) ReadObjects(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
-	relData, err := this.Read(q)
+func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
+	relData, err := this.ReadRelational(q)
 	if err != nil {
 		return object.NewError(err.Error())
 	}

@@ -2,9 +2,9 @@ package stmt
 
 import (
 	"database/sql"
+	"github.com/saichler/l8orm/go/types/l8orm"
 	"reflect"
 
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8reflect"
@@ -27,7 +27,7 @@ func NewStatement(node *l8reflect.L8Node, columns map[string]int32, query ifs.IQ
 	return &Statement{node: node, columns: columns, registy: registy, query: query}
 }
 
-func (this *Statement) RowValues(row *types.Row) ([]interface{}, error) {
+func (this *Statement) RowValues(row *l8orm.L8OrmRow) ([]interface{}, error) {
 	result := make([]interface{}, len(this.values))
 	result[0] = row.ParentKey
 	result[1] = row.RecKey

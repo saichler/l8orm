@@ -2,18 +2,18 @@ package convert
 
 import (
 	"errors"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"strings"
 	"sync"
 
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8reflect"
 )
 
-func NewRelationsDataForQuery(query ifs.IQuery) (*types.RelationalData, error) {
-	rlData := &types.RelationalData{}
+func NewRelationsDataForQuery(query ifs.IQuery) (*l8orms.L8OrmRData, error) {
+	rlData := &l8orms.L8OrmRData{}
 	rlData.RootTypeName = query.RootType().TypeName
-	rlData.Tables = make(map[string]*types.Table)
+	rlData.Tables = make(map[string]*l8orms.L8OrmTable)
 	properties := make([]string, len(query.Properties()))
 	for i, p := range query.Properties() {
 		id, _ := p.PropertyId()
@@ -24,24 +24,24 @@ func NewRelationsDataForQuery(query ifs.IQuery) (*types.RelationalData, error) {
 	return rlData, err
 }
 
-func NewRelationalDataForType(typeName string, introspector ifs.IIntrospector) (*types.RelationalData, error) {
+func NewRelationalDataForType(typeName string, introspector ifs.IIntrospector) (*l8orms.L8OrmRData, error) {
 	node, ok := introspector.NodeByTypeName(typeName)
 	if !ok {
 		return nil, errors.New("Did not find any node for " + typeName)
 	}
-	rlData := &types.RelationalData{}
+	rlData := &l8orms.L8OrmRData{}
 	rlData.RootTypeName = typeName
-	rlData.Tables = make(map[string]*types.Table)
+	rlData.Tables = make(map[string]*l8orms.L8OrmTable)
 	err := addTable(node, rlData, typeName)
 	return rlData, err
 }
 
-func addTable(node *l8reflect.L8Node, rlData *types.RelationalData, properties ...string) error {
+func addTable(node *l8reflect.L8Node, rlData *l8orms.L8OrmRData, properties ...string) error {
 	_, ok := rlData.Tables[node.TypeName]
 	if ok && properties == nil {
 		return nil
 	}
-	table := &types.Table{}
+	table := &l8orms.L8OrmTable{}
 	table.Name = node.TypeName
 	rlData.Tables[node.TypeName] = table
 
@@ -122,7 +122,7 @@ func getAttrName(property string, node *l8reflect.L8Node) (string, string) {
 	return attrName, attrProp
 }
 
-func SetColumns(table *types.Table, node *l8reflect.L8Node) {
+func SetColumns(table *l8orms.L8OrmTable, node *l8reflect.L8Node) {
 	if table.Columns == nil {
 		table.Columns = make(map[string]int32)
 		for attrName, attrNode := range node.Attributes {
@@ -134,7 +134,7 @@ func SetColumns(table *types.Table, node *l8reflect.L8Node) {
 	}
 }
 
-func addColumn(table *types.Table, attrName string) {
+func addColumn(table *l8orms.L8OrmTable, attrName string) {
 	if table.Columns == nil {
 		table.Columns = make(map[string]int32)
 	}

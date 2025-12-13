@@ -2,10 +2,10 @@ package convert
 
 import (
 	"bytes"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"reflect"
 	"strconv"
 
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8reflect"
@@ -17,8 +17,8 @@ func ConvertTo(objects ifs.IElements, res ifs.IResources) ifs.IElements {
 		return nil
 	}
 
-	data := &types.RelationalData{}
-	data.Tables = make(map[string]*types.Table)
+	data := &l8orms.L8OrmRData{}
+	data.Tables = make(map[string]*l8orms.L8OrmTable)
 	v := reflect.ValueOf(objects.Element())
 	data.RootTypeName = TypeOf(v)
 
@@ -68,7 +68,7 @@ func TypeOf(v reflect.Value) string {
 	panic("Unknown type: " + v.Type().Name())
 }
 
-func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8Node, data *types.RelationalData, res ifs.IResources) error {
+func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8Node, data *l8orms.L8OrmRData, res ifs.IResources) error {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
@@ -80,7 +80,7 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8N
 	table, attributeRows := TableAndRowsCreate(node, data, parentKey)
 	SetColumns(table, node)
 
-	row := &types.Row{}
+	row := &l8orms.L8OrmRow{}
 	row.ParentKey = parentKey
 	row.RecKey = RecKey(node, value, myKey, res)
 	row.ColumnValues = make(map[int32][]byte)
@@ -136,36 +136,36 @@ func convertTo(value reflect.Value, parentKey, myKey string, node *l8reflect.L8N
 	return nil
 }
 
-func TableAndRowsCreate(node *l8reflect.L8Node, data *types.RelationalData, parentKey string) (*types.Table, *types.AttributeRows) {
+func TableAndRowsCreate(node *l8reflect.L8Node, data *l8orms.L8OrmRData, parentKey string) (*l8orms.L8OrmTable, *l8orms.L8OrmAttributeRows) {
 	table, ok := data.Tables[node.TypeName]
 	if !ok {
-		table = &types.Table{}
+		table = &l8orms.L8OrmTable{}
 		table.Name = node.TypeName
 		data.Tables[node.TypeName] = table
 	}
 	if table.InstanceRows == nil {
-		table.InstanceRows = make(map[string]*types.InstanceRows)
+		table.InstanceRows = make(map[string]*l8orms.L8OrmInstanceRows)
 	}
 	instanceRows, ok := table.InstanceRows[parentKey]
 	if !ok {
-		instanceRows = &types.InstanceRows{}
+		instanceRows = &l8orms.L8OrmInstanceRows{}
 		table.InstanceRows[parentKey] = instanceRows
 	}
 	if instanceRows.AttributeRows == nil {
-		instanceRows.AttributeRows = make(map[string]*types.AttributeRows)
+		instanceRows.AttributeRows = make(map[string]*l8orms.L8OrmAttributeRows)
 	}
 	attributeRows, ok := instanceRows.AttributeRows[node.FieldName]
 	if !ok {
-		attributeRows = &types.AttributeRows{}
+		attributeRows = &l8orms.L8OrmAttributeRows{}
 		instanceRows.AttributeRows[node.FieldName] = attributeRows
 	}
 	if attributeRows.Rows == nil {
-		attributeRows.Rows = make([]*types.Row, 0)
+		attributeRows.Rows = make([]*l8orms.L8OrmRow, 0)
 	}
 	return table, attributeRows
 }
 
-func SetValueToRow(row *types.Row, col int32, val reflect.Value) error {
+func SetValueToRow(row *l8orms.L8OrmRow, col int32, val reflect.Value) error {
 	obj := object.NewEncode()
 	err := obj.Add(val.Interface())
 	if err != nil {
@@ -192,7 +192,7 @@ func RecKey(node *l8reflect.L8Node, value reflect.Value, myKey string, res ifs.I
 	}
 }
 
-func KeyForRow(row *types.Row) string {
+func KeyForRow(row *l8orms.L8OrmRow) string {
 	buff := bytes.Buffer{}
 	buff.WriteString(row.ParentKey)
 	buff.WriteString(row.RecKey)
