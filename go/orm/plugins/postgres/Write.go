@@ -6,6 +6,7 @@ import (
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/stmt"
 	"github.com/saichler/l8orm/go/types/l8orms"
+	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 )
 
@@ -81,9 +82,41 @@ func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) erro
 }
 
 func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources ifs.IResources) error {
-	relData := convert.ConvertTo(action, elems, resources)
-	if relData.Error() != nil {
-		return relData.Error()
+	elements := elems.Elements()
+
+	// If within batch size, process directly (original behavior)
+	if len(elements) <= this.batchSize {
+		relData := convert.ConvertTo(action, elems, resources)
+		if relData.Error() != nil {
+			return relData.Error()
+		}
+		return this.WriteRelational(action, relData.Element().(*l8orms.L8OrmRData))
 	}
-	return this.WriteRelational(action, relData.Element().(*l8orms.L8OrmRData))
+
+	// Process in batches of batchSize
+	for start := 0; start < len(elements); start += this.batchSize {
+		end := start + this.batchSize
+		if end > len(elements) {
+			end = len(elements)
+		}
+
+		// Create batch slice
+		batchSlice := make([]interface{}, end-start)
+		for i := start; i < end; i++ {
+			batchSlice[i-start] = elements[i]
+		}
+
+		// Convert and write this batch
+		batchElems := object.New(nil, batchSlice)
+		relData := convert.ConvertTo(action, batchElems, resources)
+		if relData.Error() != nil {
+			return relData.Error()
+		}
+
+		err := this.WriteRelational(action, relData.Element().(*l8orms.L8OrmRData))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

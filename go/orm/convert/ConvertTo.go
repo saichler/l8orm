@@ -65,6 +65,9 @@ func TypeOf(v reflect.Value) string {
 	} else if v.Kind() == reflect.Struct {
 		return v.Type().Name()
 	}
+	if !v.IsValid() {
+		panic("Value is invalid")
+	}
 	panic("Unknown type: " + v.Type().Name())
 }
 

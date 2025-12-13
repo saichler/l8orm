@@ -12,14 +12,15 @@ import (
 )
 
 type Postgres struct {
-	db       *sql.DB
-	verifyed map[string]bool
-	mtx      *sync.Mutex
-	res      ifs.IResources
+	db        *sql.DB
+	verifyed  map[string]bool
+	mtx       *sync.Mutex
+	res       ifs.IResources
+	batchSize int
 }
 
 func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
-	return &Postgres{db: db, verifyed: make(map[string]bool), mtx: &sync.Mutex{}, res: resourcs}
+	return &Postgres{db: db, verifyed: make(map[string]bool), mtx: &sync.Mutex{}, res: resourcs, batchSize: 500}
 }
 
 func collectTables(node *l8reflect.L8Node, tables map[string]bool) {
