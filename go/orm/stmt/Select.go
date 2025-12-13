@@ -2,7 +2,7 @@ package stmt
 
 import (
 	"database/sql"
-	"github.com/saichler/l8orm/go/types/l8orm"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8utils/go/utils/strings"
 	"reflect"
@@ -50,10 +50,10 @@ func (this *Statement) createSelectStatement(tx *sql.Tx) error {
 	return nil
 }
 
-func (this *Statement) Row(rows *sql.Rows) (*l8orm.L8OrmRow, error) {
+func (this *Statement) Row(rows *sql.Rows) (*l8orms.L8OrmRow, error) {
 	args, err := this.NewArgs()
 	vals := make([]interface{}, len(args))
-	row := &l8orm.L8OrmRow{}
+	row := &l8orms.L8OrmRow{}
 	if err != nil {
 		return nil, err
 	}

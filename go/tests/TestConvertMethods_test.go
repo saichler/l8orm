@@ -22,7 +22,7 @@ func TestConvert(t *testing.T) {
 		return
 	}
 
-	r := resp.Element().(*types.RelationalData)
+	r := resp.Element().(*l8orms.L8OrmRData)
 
 	if len(r.Tables) != 3 {
 		Log.Fail(t, "Expected 3 tables")

@@ -2,10 +2,11 @@ package tests
 
 import (
 	"fmt"
+	"github.com/saichler/l8orm/go/orm/plugins/postgres"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"testing"
 
 	"github.com/saichler/l8orm/go/orm/convert"
-	"github.com/saichler/l8orm/go/orm/persist"
 	"github.com/saichler/l8ql/go/gsql/interpreter"
 	"github.com/saichler/l8reflect/go/reflect/updating"
 	"github.com/saichler/l8reflect/go/tests/utils"
@@ -29,10 +30,10 @@ func TestPostgres(t *testing.T) {
 		return
 	}
 
-	relData := resp.Element().(*types.RelationalData)
+	relData := resp.Element().(*l8orms.L8OrmRData)
 
-	p := persist.NewPostgres(db, res)
-	err := p.Write(relData)
+	p := postgres.NewPostgres(db, res)
+	err := p.WriteRelational(ifs.POST, relData)
 	if err != nil {
 		Log.Fail(t, "Error writing relationship", err)
 		return
@@ -43,7 +44,7 @@ func TestPostgres(t *testing.T) {
 		Log.Fail(err)
 		return
 	}
-	relData, err = p.Read(qr)
+	relData, err = p.ReadRelational(qr)
 	if err != nil {
 		Log.Fail(t, "Error reading relationship", err)
 		return
@@ -103,7 +104,7 @@ func TestPostgresFields(t *testing.T) {
 		return
 	}
 	query, _ := qr.Query(res)
-	relData, err := p.Read(query)
+	relData, err := p.ReadRelational(query)
 	if err != nil {
 		Log.Fail(t, err)
 	}
@@ -144,7 +145,7 @@ func TestPostgresCriteria(t *testing.T) {
 		return
 	}
 	query, _ := qr.Query(res)
-	relData, err := p.Read(query)
+	relData, err := p.ReadRelational(query)
 	if err != nil {
 		Log.Fail(t, err)
 		return

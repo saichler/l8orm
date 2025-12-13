@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"testing"
 
 	"github.com/saichler/l8orm/go/orm/convert"
@@ -37,14 +38,14 @@ func TestConvertService(t *testing.T) {
 		nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
 		helping.AddPrimaryKeyDecorator(node, "MyString")
 	*/
-	nic2.Resources().Introspector().Inspect(&types2.RelationalData{})
+	nic2.Resources().Introspector().Inspect(&l8orms.L8OrmRData{})
 	resp = nic2.Request(nic.Resources().SysConfig().LocalUuid, convert.ServiceName, 0, ifs.POST, before, 5)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, "[error]", resp.Error())
 		return
 	}
 
-	rlData := resp.Element().(*types2.RelationalData)
+	rlData := resp.Element().(*l8orms.L8OrmRData)
 	if len(rlData.Tables) != 3 {
 		Log.Fail(t, "Expected 3 tables")
 		return
@@ -76,7 +77,7 @@ func TestConvertServiceMulti(t *testing.T) {
 
 	//node, _ := nic.Resources().Introspector().Inspect(before1)
 	nic2 := topo.VnicByVnetNum(1, 3)
-	nic2.Resources().Registry().Register(&types2.RelationalData{})
+	nic2.Resources().Registry().Register(&l8orms.L8OrmRData{})
 	//nic2.Resources().Introspector().Inspect(before1)
 	//introspecting.AddPrimaryKeyDecorator(node, "MyString")
 
@@ -87,7 +88,7 @@ func TestConvertServiceMulti(t *testing.T) {
 		return
 	}
 
-	rlData := resp.Element().(*types2.RelationalData)
+	rlData := resp.Element().(*l8orms.L8OrmRData)
 	if len(rlData.Tables) != 3 {
 		Log.Fail(t, "Expected 3 tables")
 		return

@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"github.com/saichler/l8orm/go/orm/plugins/postgres"
 	"testing"
 	"time"
 
@@ -29,7 +30,7 @@ func TestPostgresService(t *testing.T) {
 		introspecting.AddPrimaryKeyDecorator(node, "MyString")
 	*/
 	serviceName := "postgres"
-	p := persist.NewPostgres(db, eg2.Resources())
+	p := postgres.NewPostgres(db, eg2.Resources())
 	persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, "MyString")
 
 	time.Sleep(time.Second)
@@ -87,7 +88,7 @@ func TestPostgresServiceReplication(t *testing.T) {
 	for i := 1; i <= 4; i++ {
 		eg2 := topo.VnicByVnetNum(2, i)
 
-		p := persist.NewPostgres(db, eg2.Resources())
+		p := postgres.NewPostgres(db, eg2.Resources())
 		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, "MyString")
 	}
 

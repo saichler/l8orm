@@ -3,12 +3,12 @@ package tests
 import (
 	"database/sql"
 	"fmt"
+	"github.com/saichler/l8orm/go/orm/plugins/postgres"
+	"github.com/saichler/l8orm/go/types/l8orms"
 	"testing"
 
 	_ "github.com/lib/pq"
 	"github.com/saichler/l8orm/go/orm/convert"
-	"github.com/saichler/l8orm/go/orm/persist"
-	"github.com/saichler/l8orm/go/types"
 	"github.com/saichler/l8reflect/go/tests/utils"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	. "github.com/saichler/l8test/go/infra/t_resources"
@@ -75,7 +75,7 @@ func clean(db *sql.DB) {
 	}
 }
 
-func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *persist.Postgres) {
+func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *postgres.Postgres) {
 	db := openDBConection()
 	recs := make([]*testtypes.TestProto, size)
 	for i := 0; i < 100; i++ {
@@ -88,10 +88,10 @@ func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *persi
 		return false, nil, nil
 	}
 
-	relData := resp.Element().(*types.RelationalData)
+	relData := resp.Element().(*l8orms.L8OrmRData)
 
-	p := persist.NewPostgres(db, res)
-	err := p.Write(relData)
+	p := postgres.NewPostgres(db, res)
+	err := p.WriteRelational(POST, relData)
 	if err != nil {
 		Log.Fail(t, "Error writing relationship", err)
 		return false, nil, nil
