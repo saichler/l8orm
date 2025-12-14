@@ -29,7 +29,7 @@ func TestConvert(t *testing.T) {
 		return
 	}
 
-	resp = convert.ConvertFrom(resp, res)
+	resp = convert.ConvertFrom(resp, nil, res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -71,7 +71,7 @@ func TestConvertMultiValue(t *testing.T) {
 		return
 	}
 
-	resp = convert.ConvertFrom(resp, res)
+	resp = convert.ConvertFrom(resp, nil, res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return
@@ -118,7 +118,7 @@ func TestConvertMultiValueNoKey(t *testing.T) {
 		return
 	}
 
-	resp = convert.ConvertFrom(resp, res)
+	resp = convert.ConvertFrom(resp, nil, res)
 	if resp != nil && resp.Error() != nil {
 		Log.Fail(t, resp.Error())
 		return

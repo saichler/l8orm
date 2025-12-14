@@ -61,14 +61,14 @@ func TestPostgresPatch(t *testing.T) {
 		Log.Fail(t, err)
 		return
 	}
-	relData, err = p.ReadRelational(qr)
+	relData, _, err = p.ReadRelational(qr)
 	if err != nil {
 		Log.Fail(t, "Error reading record", err)
 		return
 	}
 
 	elems := object.New(nil, relData)
-	readObjects := convert.ConvertFrom(elems, res)
+	readObjects := convert.ConvertFrom(elems, nil, res)
 	if readObjects != nil && readObjects.Error() != nil {
 		Log.Fail(t, "Error converting from relational", readObjects.Error())
 		return

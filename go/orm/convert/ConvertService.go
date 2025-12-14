@@ -34,7 +34,7 @@ func (this *ConvertService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElemen
 	return nil
 }
 func (this *ConvertService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return ConvertFrom(pb, vnic.Resources())
+	return ConvertFrom(pb, nil, vnic.Resources())
 }
 func (this *ConvertService) GetCopy(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil

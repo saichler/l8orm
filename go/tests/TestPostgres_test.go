@@ -44,14 +44,14 @@ func TestPostgres(t *testing.T) {
 		Log.Fail(err)
 		return
 	}
-	relData, err = p.ReadRelational(qr)
+	relData, _, err = p.ReadRelational(qr)
 	if err != nil {
 		Log.Fail(t, "Error reading relationship", err)
 		return
 	}
 
 	elems := object.New(nil, relData)
-	readObjects := convert.ConvertFrom(elems, res)
+	readObjects := convert.ConvertFrom(elems, nil, res)
 	if readObjects != nil && readObjects.Error() != nil {
 		Log.Fail(t, "Error reading relationship", readObjects.Error())
 		return
@@ -104,12 +104,12 @@ func TestPostgresFields(t *testing.T) {
 		return
 	}
 	query, _ := qr.Query(res)
-	relData, err := p.ReadRelational(query)
+	relData, _, err := p.ReadRelational(query)
 	if err != nil {
 		Log.Fail(t, err)
 	}
 	elems := object.New(nil, relData)
-	readObjects := convert.ConvertFrom(elems, res)
+	readObjects := convert.ConvertFrom(elems, nil, res)
 	if readObjects != nil && readObjects.Error() != nil {
 		Log.Fail(t, "Error reading relationship", readObjects.Error())
 		return
@@ -145,13 +145,13 @@ func TestPostgresCriteria(t *testing.T) {
 		return
 	}
 	query, _ := qr.Query(res)
-	relData, err := p.ReadRelational(query)
+	relData, _, err := p.ReadRelational(query)
 	if err != nil {
 		Log.Fail(t, err)
 		return
 	}
 	elems := object.New(nil, relData)
-	readObjects := convert.ConvertFrom(elems, res)
+	readObjects := convert.ConvertFrom(elems, nil, res)
 	if readObjects != nil && readObjects.Error() != nil {
 		Log.Fail(t, "Error reading relationship", readObjects.Error())
 		return

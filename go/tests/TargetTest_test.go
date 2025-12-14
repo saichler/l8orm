@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"github.com/saichler/l8orm/go/orm/plugins/postgres"
 	"github.com/saichler/l8pollaris/go/pollaris/targets"
 	"github.com/saichler/l8pollaris/go/types/l8tpollaris"
@@ -53,7 +54,7 @@ func TestTarget(t *testing.T) {
 
 	devices2 := make([]*l8tpollaris.L8PTarget, size)
 	for i, device := range devices {
-		device2 := &l8tpollaris.L8PTarget{TargetId: device.TargetId, State: l8tpollaris.L8TargetState_Up}
+		device2 := &l8tpollaris.L8PTarget{TargetId: device.TargetId, State: l8tpollaris.L8PTargetState_Up}
 		devices2[i] = device2
 	}
 
@@ -110,4 +111,27 @@ func TestTargetService(t *testing.T) {
 			return
 		}
 	}
+
+	q, _ = object.NewQuery("select * from l8ptarget limit 10 page 0", nic.Resources())
+	resp = ts.Get(q, nic)
+	if resp.Error() != nil {
+		nic.Resources().Logger().Fail(t, "Get limit", resp.Error())
+		return
+	}
+
+	if len(resp.Elements()) != 10 {
+		nic.Resources().Logger().Fail(t, "Get limit", len(resp.Elements()))
+		return
+	}
+	list, err := resp.AsList(nic.Resources().Registry())
+	if err != nil {
+		nic.Resources().Logger().Fail(t, "AsList", resp.Error())
+		return
+	}
+	tlist := list.(*l8tpollaris.L8PTargetList)
+	if tlist.Metadata == nil {
+		nic.Resources().Logger().Fail(t, "Expected metadata")
+		return
+	}
+	fmt.Println(tlist.Metadata.KeyCount.Counts["Total"])
 }

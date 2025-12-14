@@ -19,9 +19,10 @@ type Statement struct {
 	node    *l8reflect.L8Node
 	query   ifs.IQuery
 
-	insertStmt *sql.Stmt
-	selectStmt *sql.Stmt
-	updateStmt *sql.Stmt
+	insertStmt   *sql.Stmt
+	selectStmt   *sql.Stmt
+	updateStmt   *sql.Stmt
+	metaDataStmt *sql.Stmt
 }
 
 func NewStatement(node *l8reflect.L8Node, columns map[string]int32, query ifs.IQuery, registy ifs.IRegistry) *Statement {

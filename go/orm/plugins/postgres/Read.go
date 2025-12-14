@@ -8,13 +8,14 @@ import (
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8api"
 	"strings"
 )
 
-func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, error) {
+func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, *l8api.L8MetaData, error) {
 	data, err := convert.NewRelationsDataForQuery(query)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	this.mtx.Lock()
@@ -25,7 +26,7 @@ func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, erro
 
 	tx, er = this.db.Begin()
 	if er != nil {
-		return nil, er
+		return nil, nil, er
 	}
 
 	defer func() {
@@ -36,26 +37,33 @@ func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, erro
 		}
 	}()
 
+	var rootTableStatement *stmt.Statement
+
 	for tableName, table := range data.Tables {
 		node, ok := this.res.Introspector().NodeByTypeName(tableName)
 		if !ok {
-			return nil, errors.New("table not found " + data.RootTypeName)
+			return nil, nil, errors.New("table not found " + data.RootTypeName)
 		}
 		statement := stmt.NewStatement(node, table.Columns, query, this.res.Registry())
 		st, err := statement.SelectStatement(tx)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if st == nil {
 			continue
 		}
+
+		if strings.ToLower(tableName) == strings.ToLower(query.RootType().TypeName) {
+			rootTableStatement = statement
+		}
+
 		rows, err := st.Query()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		dataRow, err := this.readRows(rows, statement)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		for _, row := range dataRow {
 			fldName := nameOfField(row.RecKey)
@@ -78,7 +86,7 @@ func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, erro
 			attrRows.Rows = append(attrRows.Rows, row)
 		}
 	}
-	return data, nil
+	return data, rootTableStatement.MetaData(tx), nil
 }
 
 func nameOfField(recKey string) string {
@@ -102,9 +110,9 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8
 }
 
 func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
-	relData, err := this.ReadRelational(q)
+	relData, metadata, err := this.ReadRelational(q)
 	if err != nil {
 		return object.NewError(err.Error())
 	}
-	return convert.ConvertFrom(object.New(nil, relData), resources)
+	return convert.ConvertFrom(object.New(nil, relData), metadata, resources)
 }

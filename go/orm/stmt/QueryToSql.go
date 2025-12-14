@@ -7,6 +7,21 @@ import (
 	"reflect"
 )
 
+func (this *Statement) Query2CountSql(query ifs.IQuery, typeName string) string {
+	buff := bytes.Buffer{}
+	buff.WriteString("SELECT COUNT(*) FROM ")
+	buff.WriteString(typeName)
+
+	if query != nil && query.Criteria() != nil && typeName == query.RootType().TypeName {
+		ok, str := expression(query.Criteria(), query.RootType().TypeName)
+		if ok {
+			buff.WriteString(" WHERE ")
+			buff.WriteString(str)
+		}
+	}
+	return buff.String()
+}
+
 func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, bool) {
 	buff := bytes.Buffer{}
 	if query.Properties() == nil || len(query.Properties()) == 0 {

@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/saichler/l8orm/go/types/l8orms"
+	"github.com/saichler/l8types/go/types/l8api"
 	"reflect"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	strings2 "github.com/saichler/l8utils/go/utils/strings"
 )
 
-func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
+func ConvertFrom(o ifs.IElements, metadata *l8api.L8MetaData, res ifs.IResources) ifs.IElements {
 	data := o.Element().(*l8orms.L8OrmRData)
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
@@ -22,7 +23,7 @@ func ConvertFrom(o ifs.IElements, res ifs.IResources) ifs.IElements {
 	if e != nil {
 		return object.NewError(e.Error())
 	}
-	return object.New(nil, resp)
+	return object.NewQueryResult(resp, metadata)
 }
 
 func convertFrom(node *l8reflect.L8Node, parentKey string, data *l8orms.L8OrmRData, res ifs.IResources) (interface{}, error) {
