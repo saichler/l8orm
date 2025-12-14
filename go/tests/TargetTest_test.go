@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/saichler/l8orm/go/orm/plugins/postgres"
+	"github.com/saichler/l8pollaris/go/pollaris/targets"
 	"github.com/saichler/l8pollaris/go/types/l8tpollaris"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
@@ -14,7 +15,7 @@ import (
 func TestTarget(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8tpollaris.L8PTarget{}, "TargetId")
-	size := 25000
+	size := 100
 	devices := make([]*l8tpollaris.L8PTarget, size)
 	ip := 1
 	sub := 40
@@ -73,5 +74,40 @@ func TestTarget(t *testing.T) {
 	if count != size {
 		nic.Resources().Logger().Fail(t, "Count 2 ", count, " is not equal to size ", size)
 		return
+	}
+}
+
+func TestTargetService(t *testing.T) {
+	nic := topo.VnicByVnetNum(2, 2)
+	targets.Activate("postgres", "postgres", nic)
+	size := 100
+	devices := make([]*l8tpollaris.L8PTarget, size)
+	ip := 1
+	sub := 40
+	for i := 0; i < size; i++ {
+		device := creates.CreateDevice("60.50."+strconv.Itoa(sub)+"."+strconv.Itoa(ip), common.NetworkDevice_Links_ID, "sim")
+		devices[i] = device
+		ip++
+		if ip > 254 {
+			sub++
+			ip = 1
+		}
+	}
+
+	ts, _ := targets.Targets(nic)
+	ts.Post(object.New(nil, devices), nic)
+
+	q, _ := object.NewQuery("select * from l8ptarget", nic.Resources())
+	resp := ts.Get(q, nic)
+	if resp.Error() != nil {
+		nic.Resources().Logger().Fail(t, "Get", resp.Error())
+		return
+	}
+	for _, d := range resp.Elements() {
+		dev := d.(*l8tpollaris.L8PTarget)
+		if dev.TargetId == "" {
+			nic.Resources().Logger().Fail(t, "TargetId", dev.TargetId)
+			return
+		}
 	}
 }

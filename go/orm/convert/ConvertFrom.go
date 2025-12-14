@@ -161,7 +161,14 @@ func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *
 	if fieldValue.Kind() == reflect.Int32 {
 		fieldValue.SetInt(reflect.ValueOf(v).Int())
 	} else {
-		fieldValue.Set(reflect.ValueOf(v))
+		setFieldValue := reflect.ValueOf(v)
+		if fieldValue.Kind() == setFieldValue.Kind() {
+			fieldValue.Set(reflect.ValueOf(v))
+		} else {
+			if setFieldValue.Kind() != reflect.String || setFieldValue.String() != "" {
+				panic("Not set" + setFieldValue.String())
+			}
+		}
 	}
 	return nil
 }
