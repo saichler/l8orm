@@ -7,7 +7,7 @@ import (
 
 func (this *OrmService) Before(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if this.sla.Callback() != nil {
-		elems := make([]interface{}, len(pb.Elements()))
+		elems := make([]interface{}, 0)
 		for _, elem := range pb.Elements() {
 			before, err := this.sla.Callback().Before(elem, action, pb.Notification(), vnic)
 			if err != nil {
