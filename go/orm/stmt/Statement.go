@@ -86,6 +86,9 @@ func getValueForPostgres(data []byte, r ifs.IRegistry) (interface{}, error) {
 		return nil, err
 	}
 	v := reflect.ValueOf(val)
+	if !v.IsValid() {
+		return "nil", nil
+	}
 	if v.Kind() == reflect.Slice || v.Kind() == reflect.Map {
 		str := strings.New()
 		str.TypesPrefix = true
