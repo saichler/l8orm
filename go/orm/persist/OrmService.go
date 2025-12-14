@@ -99,10 +99,10 @@ func (this *OrmService) TransactionConfig() ifs.ITransactionConfig {
 }
 
 func (this *OrmService) Replication() bool {
-	return true
+	return false
 }
 func (this *OrmService) ReplicationCount() int {
-	return 2
+	return 0
 }
 func (this *OrmService) Voter() bool {
 	return true
