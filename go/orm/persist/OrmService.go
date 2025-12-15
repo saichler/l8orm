@@ -64,7 +64,22 @@ func (this *OrmService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return this.do(ifs.PATCH, pb, vnic)
 }
 func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	return nil
+	if pb.IsFilterMode() {
+		q, e := ElementToQuery(pb, this.sla.ServiceItem(), vnic)
+		if e != nil {
+			return object.NewError(e.Error())
+		}
+		err := this.orm.Delete(q, vnic.Resources())
+		return object.New(err, nil)
+	}
+
+	// This is a query
+	query, err := pb.Query(vnic.Resources())
+	if err != nil {
+		return object.NewError(err.Error())
+	}
+	err = this.orm.Delete(query, vnic.Resources())
+	return object.New(err, nil)
 }
 func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 

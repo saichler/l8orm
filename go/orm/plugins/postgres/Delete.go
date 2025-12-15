@@ -1,0 +1,154 @@
+package postgres
+
+import (
+	"database/sql"
+	"errors"
+	"github.com/saichler/l8orm/go/orm/convert"
+	"github.com/saichler/l8orm/go/orm/stmt"
+	"github.com/saichler/l8orm/go/types/l8orms"
+	"github.com/saichler/l8types/go/ifs"
+	"strings"
+)
+
+func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
+	data, err := convert.NewRelationsDataForQuery(query)
+	if err != nil {
+		return err
+	}
+
+	this.mtx.Lock()
+	defer this.mtx.Unlock()
+
+	var tx *sql.Tx
+	var er error
+
+	tx, er = this.db.Begin()
+	if er != nil {
+		return er
+	}
+
+	defer func() {
+		if er != nil {
+			er = tx.Rollback()
+		} else {
+			er = tx.Commit()
+		}
+	}()
+
+	// First, read the root table keys to know what to delete from child tables
+	rootTableName := query.RootType().TypeName
+	rootKeys, er := this.readRootKeys(tx, query, data)
+	if er != nil {
+		return er
+	}
+
+	// If no matching records found, nothing to delete
+	if len(rootKeys) == 0 {
+		return nil
+	}
+
+	// Delete from child tables first (to maintain referential integrity)
+	for tableName, table := range data.Tables {
+		if strings.EqualFold(tableName, rootTableName) {
+			continue // Skip root table, delete it last
+		}
+
+		node, ok := this.res.Introspector().NodeByTypeName(tableName)
+		if !ok {
+			er = errors.New("table not found " + tableName)
+			return er
+		}
+
+		statement := stmt.NewStatement(node, table.Columns, query, this.res.Registry())
+		deleteStmt, err := statement.DeleteByKeysStatement(tx, rootKeys)
+		if err != nil {
+			er = err
+			return er
+		}
+		if deleteStmt == nil {
+			continue
+		}
+
+		_, err = deleteStmt.Exec()
+		if err != nil {
+			er = err
+			return er
+		}
+	}
+
+	// Finally, delete from root table
+	rootNode, ok := this.res.Introspector().NodeByTypeName(rootTableName)
+	if !ok {
+		er = errors.New("root table not found " + rootTableName)
+		return er
+	}
+
+	rootTable := data.Tables[rootTableName]
+	rootStatement := stmt.NewStatement(rootNode, rootTable.Columns, query, this.res.Registry())
+	rootDeleteStmt, err := rootStatement.DeleteStatement(tx, "")
+	if err != nil {
+		er = err
+		return er
+	}
+
+	_, er = rootDeleteStmt.Exec()
+	return er
+}
+
+func (this *Postgres) readRootKeys(tx *sql.Tx, query ifs.IQuery, data *l8orms.L8OrmRData) ([]string, error) {
+	rootTableName := query.RootType().TypeName
+	rootTable := data.Tables[rootTableName]
+
+	node, ok := this.res.Introspector().NodeByTypeName(rootTableName)
+	if !ok {
+		return nil, errors.New("root table not found " + rootTableName)
+	}
+
+	statement := stmt.NewStatement(node, rootTable.Columns, query, this.res.Registry())
+	selectStmt, err := statement.SelectStatement(tx)
+	if err != nil {
+		return nil, err
+	}
+	if selectStmt == nil {
+		return nil, nil
+	}
+
+	rows, err := selectStmt.Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	keys := make([]string, 0)
+	for rows.Next() {
+		var parentKey, recKey string
+		// We only need ParentKey and RecKey, scan into temp variables for other columns
+		cols, err := rows.Columns()
+		if err != nil {
+			return nil, err
+		}
+
+		values := make([]interface{}, len(cols))
+		values[0] = &parentKey
+		values[1] = &recKey
+		for i := 2; i < len(cols); i++ {
+			var temp interface{}
+			values[i] = &temp
+		}
+
+		err = rows.Scan(values...)
+		if err != nil {
+			return nil, err
+		}
+
+		// The key for child tables is ParentKey + RecKey
+		fullKey := parentKey + recKey
+		keys = append(keys, fullKey)
+	}
+
+	return keys, nil
+}
+
+func (this *Postgres) Delete(q ifs.IQuery, resources ifs.IResources) error {
+	return this.DeleteRelational(q)
+}
