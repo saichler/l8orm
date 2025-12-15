@@ -5,6 +5,7 @@ import (
 	"github.com/saichler/l8orm/go/orm/plugins/postgres"
 	"github.com/saichler/l8pollaris/go/pollaris/targets"
 	"github.com/saichler/l8pollaris/go/types/l8tpollaris"
+	"github.com/saichler/l8ql/go/gsql/interpreter"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/probler/go/prob/common"
@@ -105,11 +106,30 @@ func TestTarget(t *testing.T) {
 		nic.Resources().Logger().Fail(t, "Count 2 ", count, " is not equal to size ", size)
 		return
 	}
+
+	q, _ := interpreter.NewQuery("select * from L8PTarget", nic.Resources())
+	err = p.Delete(q, nic.Resources())
+	if err != nil {
+		nic.Resources().Logger().Fail(t, err.Error())
+	}
+
+	rows, err = db.Query("select count(*) from L8PTarget where state=1;")
+	if err != nil {
+		nic.Resources().Logger().Fail(t, err.Error())
+		return
+	}
+	rows.Next()
+	count = 0
+	rows.Scan(&count)
+	if count != 0 {
+		nic.Resources().Logger().Fail(t, "Count 3 ", count, " is not equal to size ", size)
+		return
+	}
 }
 
 func TestTargetService(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
-	targets.Activate("postgres", "postgres", nic)
+	targets.Activate("postgres", "probler", nic)
 	size := 100
 	devices := make([]*l8tpollaris.L8PTarget, size)
 	ip := 1
@@ -163,4 +183,5 @@ func TestTargetService(t *testing.T) {
 		return
 	}
 	fmt.Println(tlist.Metadata.KeyCount.Counts["Total"])
+
 }
