@@ -87,7 +87,6 @@ func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, boo
 			buff.WriteString(fmt.Sprintf(" OFFSET %d", offset))
 		}
 	}
-	fmt.Println(buff.String())
 	return buff.String(), true
 }
 
