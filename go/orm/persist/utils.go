@@ -2,6 +2,7 @@ package persist
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/saichler/l8ql/go/gsql/interpreter"
@@ -36,7 +37,7 @@ func ElementToQuery(pb ifs.IElements, elem interface{}, vnic ifs.IVNic) (ifs.IQu
 				}
 
 			}
-
+			fmt.Println(gsql)
 			q, e := interpreter.NewQuery(gsql.String(), vnic.Resources())
 			return q, e
 		}

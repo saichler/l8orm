@@ -13,6 +13,35 @@ import (
 	"testing"
 )
 
+func TestSingleTarget(t *testing.T) {
+	nic := topo.VnicByVnetNum(2, 2)
+	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8tpollaris.L8PTarget{}, "TargetId")
+	device := creates.CreateDevice("60.50."+strconv.Itoa(40)+"."+strconv.Itoa(1), common.NetworkDevice_Links_ID, "sim")
+	targets.Activate("postgres", "probler", nic)
+
+	ts, _ := targets.Targets(nic)
+	ts.Post(object.New(nil, device), nic)
+
+	q, _ := object.NewQuery("select * from L8PTarget where targetid="+device.TargetId, nic.Resources())
+	resp := ts.Get(q, nic)
+	qDevice := resp.Element().(*l8tpollaris.L8PTarget)
+	if len(qDevice.Hosts) == 0 {
+		nic.Resources().Logger().Fail(t, "Query No Hosts")
+		fmt.Println("Query No Hosts")
+		return
+	}
+
+	filter := &l8tpollaris.L8PTarget{TargetId: device.TargetId}
+	resp = ts.Get(object.New(nil, filter), nic)
+
+	cDevice := resp.Element().(*l8tpollaris.L8PTarget)
+	if len(cDevice.Hosts) == 0 {
+		nic.Resources().Logger().Fail(t, "Filter No Hosts")
+		fmt.Println("Filter No Hosts")
+		return
+	}
+}
+
 func TestTarget(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8tpollaris.L8PTarget{}, "TargetId")

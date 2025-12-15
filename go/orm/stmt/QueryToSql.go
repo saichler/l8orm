@@ -161,11 +161,11 @@ func comparator(comp ifs.IComparator, typeName string) (bool, string) {
 		buff.WriteString(comp.Left())
 		buff.WriteString(comp.Operator())
 		buff.WriteString("'")
-		buff.WriteString(comp.Right())
+		buff.WriteString(stripQuotes(comp.Right()))
 		buff.WriteString("'")
 	} else if !leftString && rightString {
 		buff.WriteString("'")
-		buff.WriteString(comp.Left())
+		buff.WriteString(stripQuotes(comp.Left()))
 		buff.WriteString("'")
 		buff.WriteString(comp.Operator())
 		buff.WriteString(comp.Right())
@@ -182,4 +182,14 @@ func isNil(any interface{}) bool {
 		return true
 	}
 	return reflect.ValueOf(any).IsNil()
+}
+
+func stripQuotes(s string) string {
+	if len(s) >= 2 {
+		if (s[0] == '\'' && s[len(s)-1] == '\'') ||
+			(s[0] == '"' && s[len(s)-1] == '"') {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }
