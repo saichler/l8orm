@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	strings2 "strings"
 	"sync"
 
@@ -67,6 +68,7 @@ func (this *Postgres) createTable(tableName string) error {
 	q.Add("ParentKey text,\n")
 	q.Add("RecKey text,\n")
 	node, ok := this.res.Introspector().NodeByTypeName(tableName)
+	nonUniqueFieldsIndex, nonUniqueErr := this.res.Introspector().Decorators().Fields(node, l8reflect.L8DecoratorType_NonUnique)
 	if !ok {
 		return errors.New("Cannot find node for table " + tableName)
 	}
@@ -81,7 +83,23 @@ func (this *Postgres) createTable(tableName string) error {
 	}
 	q.Add("CONSTRAINT ", tableName, "_key PRIMARY KEY (ParentKey, RecKey)\n);")
 	_, err := this.db.Exec(q.String())
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Create non-unique indexes if available
+	if nonUniqueErr == nil && nonUniqueFieldsIndex != nil {
+		fmt.Println("Creating a none unique index for ", tableName)
+		for _, fieldName := range nonUniqueFieldsIndex {
+			indexQ := strings.New("CREATE INDEX ", tableName, "_", fieldName, "_idx ON ", tableName, " (", fieldName, ");")
+			_, err = this.db.Exec(indexQ.String())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func postgresTypeOf(node *l8reflect.L8Node) string {

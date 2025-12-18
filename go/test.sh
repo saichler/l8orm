@@ -17,8 +17,8 @@ echo "About to run tests"
 read -n 1 -s -r -p "Press any key to continue..."
 
 # Run unit tests with coverage
-../scripts/stop-postgres.sh
-../scripts/start-postgres.sh
+#../scripts/stop-postgres.sh
+#../scripts/start-postgres.sh
 sleep 1
 go test -tags=unit -v -coverpkg=./orm/... -coverprofile=cover.html ./... --failfast
 
