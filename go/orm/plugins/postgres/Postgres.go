@@ -69,6 +69,7 @@ func (this *Postgres) createTable(tableName string) error {
 	q.Add("RecKey text,\n")
 	node, ok := this.res.Introspector().NodeByTypeName(tableName)
 	nonUniqueFieldsIndex, nonUniqueErr := this.res.Introspector().Decorators().Fields(node, l8reflect.L8DecoratorType_NonUnique)
+
 	if !ok {
 		return errors.New("Cannot find node for table " + tableName)
 	}
@@ -84,9 +85,13 @@ func (this *Postgres) createTable(tableName string) error {
 	q.Add("CONSTRAINT ", tableName, "_key PRIMARY KEY (ParentKey, RecKey)\n);")
 	_, err := this.db.Exec(q.String())
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
+	fmt.Println("Creating table ", tableName)
+	fmt.Println("nonUniqueError", nonUniqueErr)
+	fmt.Println("nonUniqueFieldsIndex", nonUniqueFieldsIndex)
 	// Create non-unique indexes if available
 	if nonUniqueErr == nil && nonUniqueFieldsIndex != nil {
 		fmt.Println("Creating a none unique index for ", tableName)
