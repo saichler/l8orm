@@ -5,13 +5,16 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 )
 
-func (this *OrmService) Before(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
+func (this *OrmService) Before(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) (ifs.IElements, bool) {
 	if this.sla.Callback() != nil {
 		elems := make([]interface{}, 0)
 		for _, elem := range pb.Elements() {
-			before, err := this.sla.Callback().Before(elem, action, pb.Notification(), vnic)
+			before, cont, err := this.sla.Callback().Before(elem, action, pb.Notification(), vnic)
 			if err != nil {
-				return object.NewError(err.Error())
+				return object.NewError(err.Error()), true
+			}
+			if !cont {
+				return nil, false
 			}
 			if before != nil {
 				arr, ok := before.([]interface{})
@@ -27,20 +30,23 @@ func (this *OrmService) Before(action ifs.Action, pb ifs.IElements, vnic ifs.IVN
 			}
 		}
 		if pb.Notification() {
-			return object.NewNotify(elems)
+			return object.NewNotify(elems), true
 		}
-		return object.New(nil, elems)
+		return object.New(nil, elems), true
 	}
-	return pb
+	return pb, true
 }
 
-func (this *OrmService) After(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
+func (this *OrmService) After(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) (ifs.IElements, bool) {
 	if this.sla.Callback() != nil {
 		elems := make([]interface{}, len(pb.Elements()))
 		for i, elem := range pb.Elements() {
-			after, err := this.sla.Callback().After(elem, action, pb.Notification(), vnic)
+			after, cont, err := this.sla.Callback().After(elem, action, pb.Notification(), vnic)
 			if err != nil {
-				return object.NewError(err.Error())
+				return object.NewError(err.Error()), true
+			}
+			if !cont {
+				return nil, false
 			}
 			if after != nil {
 				elems[i] = after
@@ -49,9 +55,9 @@ func (this *OrmService) After(action ifs.Action, pb ifs.IElements, vnic ifs.IVNi
 			}
 		}
 		if pb.Notification() {
-			return object.NewNotify(elems)
+			return object.NewNotify(elems), true
 		}
-		return object.New(nil, elems)
+		return object.New(nil, elems), true
 	}
-	return pb
+	return pb, true
 }

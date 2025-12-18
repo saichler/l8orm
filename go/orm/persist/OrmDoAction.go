@@ -3,10 +3,14 @@ package persist
 import (
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8web"
 )
 
 func (this *OrmService) do(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
-	pbBefore := this.Before(action, pb, vnic)
+	pbBefore, cont := this.Before(action, pb, vnic)
+	if !cont {
+		return object.New(nil, &l8web.L8Empty{})
+	}
 	if pbBefore != nil {
 		if pbBefore.Error() != nil {
 			return pbBefore
@@ -19,10 +23,13 @@ func (this *OrmService) do(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) 
 	if err != nil {
 		return object.NewError(err.Error())
 	}
-	pbAfter := this.After(action, pb, vnic)
+	pbAfter, cont := this.After(action, pb, vnic)
+	if !cont {
+
+	}
 	if pbAfter != nil {
-		return pbAfter
+		return object.New(nil, &l8web.L8Empty{})
 	}
 
-	return object.New(nil, nil)
+	return object.New(nil, &l8web.L8Empty{})
 }
