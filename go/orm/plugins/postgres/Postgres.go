@@ -85,13 +85,9 @@ func (this *Postgres) createTable(tableName string) error {
 	q.Add("CONSTRAINT ", tableName, "_key PRIMARY KEY (ParentKey, RecKey)\n);")
 	_, err := this.db.Exec(q.String())
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
-	fmt.Println("Creating table ", tableName)
-	fmt.Println("nonUniqueError", nonUniqueErr)
-	fmt.Println("nonUniqueFieldsIndex", nonUniqueFieldsIndex)
 	// Create non-unique indexes if available
 	if nonUniqueErr == nil && nonUniqueFieldsIndex != nil {
 		fmt.Println("Creating a none unique index for ", tableName)
