@@ -6,11 +6,41 @@ import (
 	"fmt"
 	strings2 "strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8types/go/types/l8reflect"
 	"github.com/saichler/l8utils/go/utils/strings"
 )
+
+// cachedQuery represents a cached query with its sorted RecKey array
+type cachedQuery struct {
+	recKeys  []string
+	stamp    int64
+	lastUsed int64
+	metadata *l8api.L8MetaData
+}
+
+func (cq *cachedQuery) touch() {
+	atomic.StoreInt64(&cq.lastUsed, time.Now().Unix())
+}
+
+func (cq *cachedQuery) pageKeys(page, limit int32) []string {
+	if limit <= 0 {
+		return cq.recKeys
+	}
+	start := int(page * limit)
+	if start >= len(cq.recKeys) {
+		return []string{}
+	}
+	end := start + int(limit)
+	if end > len(cq.recKeys) {
+		end = len(cq.recKeys)
+	}
+	return cq.recKeys[start:end]
+}
 
 type Postgres struct {
 	db        *sql.DB
@@ -18,10 +48,60 @@ type Postgres struct {
 	mtx       *sync.Mutex
 	res       ifs.IResources
 	batchSize int
+
+	// Primary index for paging
+	indexMtx      *sync.RWMutex
+	indexQueries  map[string]*cachedQuery
+	indexStamp    int64
+	indexTTL      int64
+	indexStopCh   chan struct{}
 }
 
 func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
-	return &Postgres{db: db, verifyed: make(map[string]bool), mtx: &sync.Mutex{}, res: resourcs, batchSize: 500}
+	p := &Postgres{
+		db:           db,
+		verifyed:     make(map[string]bool),
+		mtx:          &sync.Mutex{},
+		res:          resourcs,
+		batchSize:    500,
+		indexMtx:     &sync.RWMutex{},
+		indexQueries: make(map[string]*cachedQuery),
+		indexStamp:   time.Now().Unix(),
+		indexTTL:     30,
+		indexStopCh:  make(chan struct{}),
+	}
+	go p.indexTTLCleaner()
+	return p
+}
+
+func (this *Postgres) indexTTLCleaner() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			this.cleanExpiredQueries()
+		case <-this.indexStopCh:
+			return
+		}
+	}
+}
+
+func (this *Postgres) cleanExpiredQueries() {
+	this.indexMtx.Lock()
+	defer this.indexMtx.Unlock()
+	now := time.Now().Unix()
+	for hash, q := range this.indexQueries {
+		if now-atomic.LoadInt64(&q.lastUsed) > this.indexTTL {
+			delete(this.indexQueries, hash)
+		}
+	}
+}
+
+func (this *Postgres) invalidateIndex() {
+	this.indexMtx.Lock()
+	defer this.indexMtx.Unlock()
+	this.indexStamp = time.Now().Unix()
 }
 
 func collectTables(node *l8reflect.L8Node, tables map[string]bool) {
@@ -126,6 +206,7 @@ func postgresTypeOf(node *l8reflect.L8Node) string {
 }
 
 func (this *Postgres) Close() error {
+	close(this.indexStopCh)
 	this.db.Close()
 	return nil
 }

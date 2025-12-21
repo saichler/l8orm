@@ -110,9 +110,221 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8
 }
 
 func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
+	// Check if this query benefits from indexing (has Limit for pagination)
+	if q.Limit() > 0 {
+		return this.readWithIndex(q, resources)
+	}
+	// No pagination - use direct read
 	relData, metadata, err := this.ReadRelational(q)
 	if err != nil {
 		return object.NewError(err.Error())
 	}
 	return convert.ConvertFrom(object.New(nil, relData), metadata, resources)
+}
+
+// readWithIndex uses the in-memory primary index for paginated queries
+func (this *Postgres) readWithIndex(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
+	this.indexMtx.RLock()
+	cached, exists := this.indexQueries[q.Hash()]
+	currentStamp := this.indexStamp
+	this.indexMtx.RUnlock()
+
+	// Check cache validity
+	if exists && cached.stamp == currentStamp {
+		cached.touch()
+		return this.readByRecKeys(q, cached.pageKeys(q.Page(), q.Limit()), cached.metadata, resources)
+	}
+
+	// Cache miss or stale - fetch all RecKeys from DB
+	recKeys, metadata, err := this.readRecKeys(q)
+	if err != nil {
+		return object.NewError(err.Error())
+	}
+
+	// Cache the query
+	this.indexMtx.Lock()
+	cached = &cachedQuery{
+		recKeys:  recKeys,
+		stamp:    currentStamp,
+		lastUsed: currentStamp,
+		metadata: metadata,
+	}
+	this.indexQueries[q.Hash()] = cached
+	this.indexMtx.Unlock()
+
+	// Return the requested page
+	return this.readByRecKeys(q, cached.pageKeys(q.Page(), q.Limit()), metadata, resources)
+}
+
+// readRecKeys fetches only RecKeys for the root table (for cache population)
+func (this *Postgres) readRecKeys(query ifs.IQuery) ([]string, *l8api.L8MetaData, error) {
+	this.mtx.Lock()
+	defer this.mtx.Unlock()
+
+	node, ok := this.res.Introspector().NodeByTypeName(query.RootType().TypeName)
+	if !ok {
+		return nil, nil, errors.New("table not found " + query.RootType().TypeName)
+	}
+
+	err := this.verifyTables(node)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tx, er := this.db.Begin()
+	if er != nil {
+		return nil, nil, er
+	}
+
+	defer func() {
+		if er != nil {
+			er = tx.Rollback()
+		} else {
+			er = tx.Commit()
+		}
+	}()
+
+	statement := stmt.NewStatement(node, nil, query, this.res.Registry())
+	sqlStr := statement.Query2RecKeysSql(query, query.RootType().TypeName)
+
+	rows, err := tx.Query(sqlStr)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	recKeys := make([]string, 0)
+	for rows.Next() {
+		var recKey string
+		err := rows.Scan(&recKey)
+		if err != nil {
+			return nil, nil, err
+		}
+		recKeys = append(recKeys, recKey)
+	}
+
+	metadata := statement.MetaData(tx)
+	return recKeys, metadata, nil
+}
+
+// readByRecKeys fetches full row data for specific RecKeys (for pagination)
+func (this *Postgres) readByRecKeys(query ifs.IQuery, recKeys []string, metadata *l8api.L8MetaData, resources ifs.IResources) ifs.IElements {
+	if len(recKeys) == 0 {
+		return object.NewQueryResult(nil, metadata)
+	}
+
+	this.mtx.Lock()
+	defer this.mtx.Unlock()
+
+	data, err := convert.NewRelationsDataForQuery(query)
+	if err != nil {
+		return object.NewError(err.Error())
+	}
+
+	tx, er := this.db.Begin()
+	if er != nil {
+		return object.NewError(er.Error())
+	}
+
+	defer func() {
+		if er != nil {
+			er = tx.Rollback()
+		} else {
+			er = tx.Commit()
+		}
+	}()
+
+	// Create a map of recKey to order for preserving order
+	recKeyOrder := make(map[string]int)
+	for i, key := range recKeys {
+		recKeyOrder[key] = i
+	}
+
+	for tableName, table := range data.Tables {
+		node, ok := this.res.Introspector().NodeByTypeName(tableName)
+		if !ok {
+			return object.NewError("table not found " + tableName)
+		}
+
+		statement := stmt.NewStatement(node, table.Columns, query, this.res.Registry())
+
+		var sqlStr string
+		if strings.ToLower(tableName) == strings.ToLower(query.RootType().TypeName) {
+			// Root table: fetch by RecKeys
+			sqlStr = statement.Query2SqlByRecKeys(tableName, recKeys)
+		} else {
+			// Child tables: fetch by ParentKey matching any recKey
+			// ParentKey of child tables contains the parent's RecKey
+			st, err := statement.SelectStatement(tx)
+			if err != nil {
+				return object.NewError(err.Error())
+			}
+			if st == nil {
+				continue
+			}
+			rows, err := st.Query()
+			if err != nil {
+				return object.NewError(err.Error())
+			}
+			dataRow, err := this.readRows(rows, statement)
+			if err != nil {
+				return object.NewError(err.Error())
+			}
+			// Filter child rows by checking if ParentKey matches any root RecKey
+			for _, row := range dataRow {
+				if this.parentKeyMatchesRecKeys(row.ParentKey, recKeys) {
+					this.addRowToTable(table, row)
+				}
+			}
+			continue
+		}
+
+		rows, err := tx.Query(sqlStr)
+		if err != nil {
+			return object.NewError(err.Error())
+		}
+
+		dataRow, err := this.readRows(rows, statement)
+		if err != nil {
+			return object.NewError(err.Error())
+		}
+
+		for _, row := range dataRow {
+			this.addRowToTable(table, row)
+		}
+	}
+
+	return convert.ConvertFrom(object.New(nil, data), metadata, resources)
+}
+
+// parentKeyMatchesRecKeys checks if a child's ParentKey contains one of the root RecKeys
+func (this *Postgres) parentKeyMatchesRecKeys(parentKey string, recKeys []string) bool {
+	for _, recKey := range recKeys {
+		if strings.Contains(parentKey, recKey) {
+			return true
+		}
+	}
+	return false
+}
+
+// addRowToTable adds a row to the table's nested structure
+func (this *Postgres) addRowToTable(table *l8orms.L8OrmTable, row *l8orms.L8OrmRow) {
+	fldName := nameOfField(row.RecKey)
+	if table.InstanceRows == nil {
+		table.InstanceRows = make(map[string]*l8orms.L8OrmInstanceRows)
+	}
+	if table.InstanceRows[row.ParentKey] == nil {
+		table.InstanceRows[row.ParentKey] = &l8orms.L8OrmInstanceRows{}
+	}
+	if table.InstanceRows[row.ParentKey].AttributeRows == nil {
+		table.InstanceRows[row.ParentKey].AttributeRows = make(map[string]*l8orms.L8OrmAttributeRows)
+	}
+	if table.InstanceRows[row.ParentKey].AttributeRows[fldName] == nil {
+		table.InstanceRows[row.ParentKey].AttributeRows[fldName] = &l8orms.L8OrmAttributeRows{}
+	}
+	if table.InstanceRows[row.ParentKey].AttributeRows[fldName].Rows == nil {
+		table.InstanceRows[row.ParentKey].AttributeRows[fldName].Rows = make([]*l8orms.L8OrmRow, 0)
+	}
+	attrRows := table.InstanceRows[row.ParentKey].AttributeRows[fldName]
+	attrRows.Rows = append(attrRows.Rows, row)
 }

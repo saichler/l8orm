@@ -150,5 +150,7 @@ func (this *Postgres) readRootKeys(tx *sql.Tx, query ifs.IQuery, data *l8orms.L8
 }
 
 func (this *Postgres) Delete(q ifs.IQuery, resources ifs.IResources) error {
+	// Invalidate the index cache on delete
+	defer this.invalidateIndex()
 	return this.DeleteRelational(q)
 }

@@ -193,3 +193,81 @@ func stripQuotes(s string) string {
 	}
 	return s
 }
+
+// Query2RecKeysSql generates SQL to fetch only RecKeys (no LIMIT/OFFSET)
+// Used by PrimaryIndex to cache all matching RecKeys for pagination
+func (this *Statement) Query2RecKeysSql(query ifs.IQuery, typeName string) string {
+	buff := bytes.Buffer{}
+	buff.WriteString("SELECT RecKey FROM ")
+	buff.WriteString(typeName)
+
+	if query.Criteria() != nil && typeName == query.RootType().TypeName {
+		ok, str := expression(query.Criteria(), query.RootType().TypeName)
+		if ok {
+			buff.WriteString(" WHERE ")
+			buff.WriteString(str)
+		}
+	}
+
+	// Add ORDER BY (always include, no LIMIT/OFFSET)
+	if query.SortBy() != "" {
+		buff.WriteString(" ORDER BY ")
+		buff.WriteString(query.SortBy())
+		if query.Descending() {
+			buff.WriteString(" DESC")
+		} else {
+			buff.WriteString(" ASC")
+		}
+	}
+
+	return buff.String()
+}
+
+// Query2SqlByRecKeys generates SQL to fetch rows by specific RecKeys
+// Used by PrimaryIndex to fetch full data for a page of RecKeys
+func (this *Statement) Query2SqlByRecKeys(typeName string, recKeys []string) string {
+	buff := bytes.Buffer{}
+	buff.WriteString("SELECT ")
+
+	if this.fields == nil {
+		this.fields, this.values = fieldsOf(this.node)
+	}
+	first := true
+	for _, fieldName := range this.fields {
+		if !first {
+			buff.WriteString(",")
+		}
+		first = false
+		buff.WriteString(fieldName)
+	}
+
+	buff.WriteString(" FROM ")
+	buff.WriteString(typeName)
+	buff.WriteString(" WHERE RecKey IN (")
+
+	first = true
+	for _, key := range recKeys {
+		if !first {
+			buff.WriteString(",")
+		}
+		first = false
+		buff.WriteString("'")
+		buff.WriteString(escapeSQL(key))
+		buff.WriteString("'")
+	}
+	buff.WriteString(")")
+
+	return buff.String()
+}
+
+// escapeSQL escapes single quotes in SQL string values
+func escapeSQL(s string) string {
+	result := bytes.Buffer{}
+	for _, c := range s {
+		if c == '\'' {
+			result.WriteRune('\'')
+		}
+		result.WriteRune(c)
+	}
+	return result.String()
+}

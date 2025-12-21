@@ -82,6 +82,9 @@ func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) erro
 }
 
 func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources ifs.IResources) error {
+	// Invalidate the index cache on write
+	defer this.invalidateIndex()
+
 	elements := elems.Elements()
 
 	// If within batch size, process directly (original behavior)

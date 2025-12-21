@@ -130,7 +130,7 @@ func TestTarget(t *testing.T) {
 func TestTargetService(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	targets.Activate("postgres", "problerdb", nic)
-	size := 100
+	size := 10000
 	devices := make([]*l8tpollaris.L8PTarget, size)
 	ip := 1
 	sub := 40
