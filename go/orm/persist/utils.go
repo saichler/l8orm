@@ -25,6 +25,10 @@ import (
 	"github.com/saichler/l8utils/go/utils/strings"
 )
 
+// ElementToQuery converts a filter element into an IQuery for database operations.
+// It extracts the primary key values from the element and constructs a query
+// that selects all records matching those key values. This enables "query by example"
+// where an object with some fields set is used as a filter template.
 func ElementToQuery(pb ifs.IElements, elem interface{}, vnic ifs.IVNic) (ifs.IQuery, error) {
 	asideValue := reflect.ValueOf(pb.Element())
 	aside := asideValue.Elem().Type().Name()
@@ -59,6 +63,9 @@ func ElementToQuery(pb ifs.IElements, elem interface{}, vnic ifs.IVNic) (ifs.IQu
 	return nil, errors.New("Element does not match " + bside + " != " + aside)
 }
 
+// KeyOf extracts the primary key value from elements using the introspector's decorators.
+// This utility function provides a consistent way to get the identifying key for an element
+// regardless of how the primary key is defined on the type.
 func KeyOf(elements ifs.IElements, resources ifs.IResources) string {
 	key, _, err := resources.Introspector().Decorators().PrimaryKeyDecoratorValue(elements.Element())
 	if err != nil {

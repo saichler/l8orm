@@ -28,6 +28,8 @@ import (
 	"github.com/saichler/l8types/go/testtypes"
 )
 
+// TestMissingTableEmpty tests automatic table creation when tables don't exist.
+// Verifies that the ORM gracefully handles missing tables by creating them.
 func TestMissingTableEmpty(t *testing.T) {
 	db := openDBConection()
 	clean(db)

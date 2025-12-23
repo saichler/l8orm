@@ -24,6 +24,9 @@ import (
 	"strings"
 )
 
+// DeleteRelational removes records matching a query from the database.
+// It maintains referential integrity by first deleting child table records
+// (using ParentKey pattern matching) before deleting root table records.
 func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
 	data, err := convert.NewRelationsDataForQuery(query)
 	if err != nil {
@@ -109,6 +112,8 @@ func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
 	return er
 }
 
+// readRootKeys fetches the composite keys (ParentKey + RecKey) of records to be deleted.
+// These keys are used to identify related child records for cascading deletion.
 func (this *Postgres) readRootKeys(tx *sql.Tx, query ifs.IQuery, data *l8orms.L8OrmRData) ([]string, error) {
 	rootTableName := query.RootType().TypeName
 	rootTable := data.Tables[rootTableName]
@@ -163,6 +168,8 @@ func (this *Postgres) readRootKeys(tx *sql.Tx, query ifs.IQuery, data *l8orms.L8
 	return keys, nil
 }
 
+// Delete removes records matching the query and invalidates the query cache.
+// This is the main entry point for deletion operations from the IORM interface.
 func (this *Postgres) Delete(q ifs.IQuery, resources ifs.IResources) error {
 	// Invalidate the index cache on delete
 	defer this.invalidateIndex()

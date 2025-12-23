@@ -20,6 +20,9 @@ import (
 	"github.com/saichler/l8utils/go/utils/strings"
 )
 
+// DeleteStatement generates and prepares a DELETE SQL statement.
+// For child tables, it deletes by ParentKey pattern matching.
+// For root tables, it uses the query criteria for filtering.
 func (this *Statement) DeleteStatement(tx *sql.Tx, parentKeyPattern string) (*sql.Stmt, error) {
 	del := strings.New("DELETE FROM ")
 	del.Add(this.node.TypeName)
@@ -42,6 +45,9 @@ func (this *Statement) DeleteStatement(tx *sql.Tx, parentKeyPattern string) (*sq
 	return tx.Prepare(del.String())
 }
 
+// DeleteByKeysStatement generates a DELETE statement that removes records
+// where ParentKey matches any of the provided key patterns.
+// Used for cascading deletes in child tables.
 func (this *Statement) DeleteByKeysStatement(tx *sql.Tx, keys []string) (*sql.Stmt, error) {
 	if len(keys) == 0 {
 		return nil, nil
@@ -66,6 +72,8 @@ func (this *Statement) DeleteByKeysStatement(tx *sql.Tx, keys []string) (*sql.St
 	return tx.Prepare(del.String())
 }
 
+// Query2DeleteSql generates a DELETE SQL string from a query.
+// Applies the query's criteria as a WHERE clause for the root table.
 func (this *Statement) Query2DeleteSql(query ifs.IQuery, typeName string) (string, bool) {
 	del := strings.New("DELETE FROM ")
 	del.Add(typeName)

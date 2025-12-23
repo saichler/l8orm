@@ -27,6 +27,8 @@ import (
 	"testing"
 )
 
+// TestPostgresPatch tests the PATCH operation to verify partial updates work correctly.
+// It creates a record, patches one field, and verifies other fields remain unchanged.
 func TestPostgresPatch(t *testing.T) {
 	db := openDBConection()
 	defer cleanup(db)

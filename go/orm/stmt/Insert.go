@@ -20,6 +20,8 @@ import (
 	"strconv"
 )
 
+// InsertStatement returns a prepared INSERT statement with upsert capability.
+// The statement is created lazily and cached for subsequent calls.
 func (this *Statement) InsertStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	if this.insertStmt == nil {
 		err := this.createInsertStatement(tx)
@@ -30,6 +32,8 @@ func (this *Statement) InsertStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	return this.insertStmt, nil
 }
 
+// createInsertStatement generates and prepares an INSERT SQL statement with ON CONFLICT handling.
+// When a record with the same (ParentKey, RecKey) exists, it updates all other columns.
 func (this *Statement) createInsertStatement(tx *sql.Tx) error {
 	insertInto := strings.New("insert into ", this.node.TypeName)
 	if this.fields == nil {

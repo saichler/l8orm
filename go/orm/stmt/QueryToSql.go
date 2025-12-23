@@ -21,6 +21,8 @@ import (
 	"reflect"
 )
 
+// Query2CountSql generates a SELECT COUNT(*) SQL string from a query.
+// Applies the query's criteria as a WHERE clause if present.
 func (this *Statement) Query2CountSql(query ifs.IQuery, typeName string) string {
 	buff := bytes.Buffer{}
 	buff.WriteString("SELECT COUNT(*) FROM ")
@@ -36,6 +38,9 @@ func (this *Statement) Query2CountSql(query ifs.IQuery, typeName string) string 
 	return buff.String()
 }
 
+// Query2Sql generates a SELECT SQL string from a query object.
+// It handles column projections, WHERE criteria, ORDER BY, LIMIT, and OFFSET clauses.
+// Returns false if the query doesn't select any columns for this table.
 func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, bool) {
 	buff := bytes.Buffer{}
 	if query.Properties() == nil || len(query.Properties()) == 0 {
@@ -104,6 +109,8 @@ func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, boo
 	return buff.String(), true
 }
 
+// expression converts an IExpression to a SQL WHERE clause fragment.
+// It recursively processes the expression tree, combining conditions with operators.
 func expression(exp ifs.IExpression, typeName string) (bool, string) {
 	if isNil(exp) {
 		return false, ""
@@ -130,6 +137,8 @@ func expression(exp ifs.IExpression, typeName string) (bool, string) {
 	return condOK || nextOK, buff.String()
 }
 
+// condition converts an ICondition to a SQL condition string.
+// It combines comparators with logical operators (AND/OR).
 func condition(cond ifs.ICondition, typeName string) (bool, string) {
 	if isNil(cond) {
 		return false, ""
@@ -147,6 +156,8 @@ func condition(cond ifs.ICondition, typeName string) (bool, string) {
 	return okCond || okNext, result.String()
 }
 
+// comparator converts an IComparator to a SQL comparison expression.
+// It handles string quoting based on property types.
 func comparator(comp ifs.IComparator, typeName string) (bool, string) {
 	if isNil(comp) {
 		return false, ""
@@ -191,6 +202,7 @@ func comparator(comp ifs.IComparator, typeName string) (bool, string) {
 	return leftOK || rightOK, buff.String()
 }
 
+// isNil checks if an interface value is nil, including nil interface values.
 func isNil(any interface{}) bool {
 	if any == nil {
 		return true
@@ -198,6 +210,7 @@ func isNil(any interface{}) bool {
 	return reflect.ValueOf(any).IsNil()
 }
 
+// stripQuotes removes surrounding single or double quotes from a string.
 func stripQuotes(s string) string {
 	if len(s) >= 2 {
 		if (s[0] == '\'' && s[len(s)-1] == '\'') ||
@@ -208,8 +221,9 @@ func stripQuotes(s string) string {
 	return s
 }
 
-// Query2RecKeysSql generates SQL to fetch only RecKeys (no LIMIT/OFFSET)
-// Used by PrimaryIndex to cache all matching RecKeys for pagination
+// Query2RecKeysSql generates SQL to fetch only RecKeys without LIMIT/OFFSET.
+// Used by the primary index cache to fetch all matching RecKeys for pagination.
+// The full result set is cached, and individual pages are served from cache.
 func (this *Statement) Query2RecKeysSql(query ifs.IQuery, typeName string) string {
 	buff := bytes.Buffer{}
 	buff.WriteString("SELECT RecKey FROM ")
@@ -237,8 +251,8 @@ func (this *Statement) Query2RecKeysSql(query ifs.IQuery, typeName string) strin
 	return buff.String()
 }
 
-// Query2SqlByRecKeys generates SQL to fetch rows by specific RecKeys
-// Used by PrimaryIndex to fetch full data for a page of RecKeys
+// Query2SqlByRecKeys generates SQL to fetch rows by specific RecKeys.
+// Used by the primary index to fetch full data for a page of cached RecKeys.
 func (this *Statement) Query2SqlByRecKeys(typeName string, recKeys []string) string {
 	buff := bytes.Buffer{}
 	buff.WriteString("SELECT ")
@@ -274,7 +288,7 @@ func (this *Statement) Query2SqlByRecKeys(typeName string, recKeys []string) str
 	return buff.String()
 }
 
-// escapeSQL escapes single quotes in SQL string values
+// escapeSQL escapes single quotes in SQL string values by doubling them.
 func escapeSQL(s string) string {
 	result := bytes.Buffer{}
 	for _, c := range s {

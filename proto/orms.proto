@@ -22,27 +22,56 @@ option java_outer_classname = "L8Orms";
 option java_package = "com.l8orms.types";
 option go_package = "./types/l8orms";
 
+// L8OrmRData represents the root container for relational data in the L8 ORM system.
+// It holds a collection of tables and tracks the root type name for the data hierarchy.
+// This is the primary data structure used for object-relational mapping operations.
 message L8OrmRData {
+  // tables maps table names to their corresponding L8OrmTable definitions.
+  // Each table represents a struct type in the object model.
   map<string, L8OrmTable> tables = 1;
+  // rootTypeName identifies the top-level type name in the object hierarchy.
+  // This is used to reconstruct the original object structure from relational data.
   string rootTypeName = 2;
 }
 
+// L8OrmTable represents a database table corresponding to a Go struct type.
+// It contains the table schema (columns) and all row data organized by instance and attribute.
 message L8OrmTable {
+  // name is the table name, typically matching the Go struct type name.
   string name = 1;
+  // columns maps attribute/field names to their column index positions.
+  // This defines the schema of the table.
   map<string, int32> columns = 2;
+  // instance_rows organizes rows by their parent key, enabling hierarchical data storage.
+  // The key is the parent's composite key (ParentKey + RecKey).
   map<string, L8OrmInstanceRows> instance_rows = 3;
 }
 
+// L8OrmInstanceRows groups rows by their field/attribute name within a parent instance.
+// This enables storing multiple instances of the same type under different attributes.
 message L8OrmInstanceRows {
+  // attribute_rows maps field names to their corresponding row collections.
+  // This allows the same table to store data for different attributes of the parent.
   map<string, L8OrmAttributeRows> attribute_rows = 1;
 }
 
+// L8OrmAttributeRows contains a collection of rows for a specific attribute.
+// Used for storing slice, map, or single struct field values.
 message L8OrmAttributeRows {
+  // rows is the list of data rows for this attribute.
   repeated L8OrmRow rows = 1;
 }
 
+// L8OrmRow represents a single database row with hierarchical key support.
+// The ParentKey and RecKey together form the composite primary key.
 message L8OrmRow {
+  // parent_key identifies the parent record's composite key in the hierarchy.
+  // Empty string for root-level records.
   string parent_key = 1;
+  // rec_key is the record's unique key within its parent, formatted as "FieldName[key]".
+  // For slices, the key is the index; for maps, it's the map key; for single values, it's the field name.
   string rec_key = 2;
+  // column_values maps column indices to their serialized byte values.
+  // The column index corresponds to the columns map in L8OrmTable.
   map<int32, bytes> column_values = 3;
 }

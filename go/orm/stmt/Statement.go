@@ -12,6 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+// Package stmt provides SQL statement builders for PostgreSQL database operations.
+// It generates SELECT, INSERT, UPDATE, and DELETE statements from query objects
+// and L8 reflection metadata, handling column mapping and value serialization.
 package stmt
 
 import (
@@ -25,24 +29,29 @@ import (
 	"github.com/saichler/l8utils/go/utils/strings"
 )
 
+// Statement manages SQL statement generation and execution for a single table.
+// It caches prepared statements and handles column-to-field mapping.
 type Statement struct {
-	fields  []string
-	values  map[string]int
-	columns map[string]int32
-	registy ifs.IRegistry
-	node    *l8reflect.L8Node
-	query   ifs.IQuery
+	fields  []string            // Ordered list of field names (ParentKey, RecKey, then attributes)
+	values  map[string]int      // Field name to parameter position mapping
+	columns map[string]int32    // Column name to index mapping from table schema
+	registy ifs.IRegistry       // Type registry for deserialization
+	node    *l8reflect.L8Node   // Type metadata for the table
+	query   ifs.IQuery          // Query for filtering and projection
 
-	insertStmt   *sql.Stmt
-	selectStmt   *sql.Stmt
-	updateStmt   *sql.Stmt
-	metaDataStmt *sql.Stmt
+	insertStmt   *sql.Stmt      // Cached prepared INSERT statement
+	selectStmt   *sql.Stmt      // Cached prepared SELECT statement
+	updateStmt   *sql.Stmt      // Cached prepared UPDATE statement
+	metaDataStmt *sql.Stmt      // Cached prepared COUNT statement
 }
 
+// NewStatement creates a new Statement for the given type node and column schema.
 func NewStatement(node *l8reflect.L8Node, columns map[string]int32, query ifs.IQuery, registy ifs.IRegistry) *Statement {
 	return &Statement{node: node, columns: columns, registy: registy, query: query}
 }
 
+// RowValues extracts the parameter values from a row for SQL statement execution.
+// For PATCH actions, zero values are converted to nil to trigger COALESCE behavior.
 func (this *Statement) RowValues(action ifs.Action, row *l8orms.L8OrmRow) ([]interface{}, error) {
 	result := make([]interface{}, len(this.values))
 	result[0] = row.ParentKey
@@ -71,6 +80,8 @@ func (this *Statement) RowValues(action ifs.Action, row *l8orms.L8OrmRow) ([]int
 	return result, nil
 }
 
+// isZeroValue checks if a value is the zero value for its type.
+// Used by PATCH operations to determine which fields to skip.
 func isZeroValue(val interface{}) bool {
 	if val == nil {
 		return true
@@ -79,6 +90,8 @@ func isZeroValue(val interface{}) bool {
 	return v.IsZero()
 }
 
+// fieldsOf extracts the ordered field list and position map from a node.
+// ParentKey and RecKey are always first (positions 1 and 2), followed by attributes.
 func fieldsOf(node *l8reflect.L8Node) ([]string, map[string]int) {
 	fields := []string{"ParentKey", "RecKey"}
 	values := map[string]int{"ParentKey": 1, "RecKey": 2}
@@ -94,6 +107,8 @@ func fieldsOf(node *l8reflect.L8Node) ([]string, map[string]int) {
 	return fields, values
 }
 
+// getValueForPostgres deserializes a byte array and converts it to a PostgreSQL-compatible value.
+// Slices and maps are serialized to a string format with type prefixes.
 func getValueForPostgres(data []byte, r ifs.IRegistry) (interface{}, error) {
 	obj := object.NewDecode(data, 0, r)
 	val, err := obj.Get()

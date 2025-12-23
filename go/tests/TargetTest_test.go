@@ -28,6 +28,8 @@ import (
 	"testing"
 )
 
+// TestSingleTarget tests basic CRUD operations on a single target device.
+// Verifies that a device can be created, queried by ID, and filtered.
 func TestSingleTarget(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8tpollaris.L8PTarget{}, "TargetId")
@@ -57,6 +59,8 @@ func TestSingleTarget(t *testing.T) {
 	}
 }
 
+// TestTarget tests bulk CRUD operations with 100 target devices.
+// Verifies POST, PATCH, and DELETE operations work correctly on multiple records.
 func TestTarget(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	nic.Resources().Introspector().Decorators().AddPrimaryKeyDecorator(&l8tpollaris.L8PTarget{}, "TargetId")
@@ -141,6 +145,8 @@ func TestTarget(t *testing.T) {
 	}
 }
 
+// TestTargetService tests the target service with 10,000 devices and pagination.
+// Verifies that the service handles large datasets and returns proper metadata.
 func TestTargetService(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	targets.Activate("postgres", "problerdb", nic)

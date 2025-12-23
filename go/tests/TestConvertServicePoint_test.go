@@ -26,12 +26,15 @@ import (
 	"github.com/saichler/l8types/go/testtypes"
 )
 
+// TestMain is the test entry point that sets up and tears down the test topology.
 func TestMain(m *testing.M) {
 	setup()
 	m.Run()
 	tear()
 }
 
+// TestConvertService tests the ConvertService as a distributed Layer 8 service.
+// Verifies that conversion operations work correctly across the service mesh.
 func TestConvertService(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	sla := ifs.NewServiceLevelAgreement(&convert.ConvertService{}, convert.ServiceName, 0, false, nil)
@@ -81,6 +84,8 @@ func TestConvertService(t *testing.T) {
 	}
 }
 
+// TestConvertServiceMulti tests conversion of multiple objects through the service.
+// Verifies distributed conversion handles multiple instances correctly.
 func TestConvertServiceMulti(t *testing.T) {
 	nic := topo.VnicByVnetNum(2, 2)
 	sla := ifs.NewServiceLevelAgreement(&convert.ConvertService{}, convert.ServiceName, 0, false, nil)

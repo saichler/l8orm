@@ -24,6 +24,10 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 )
 
+// WriteRelational persists relational data to the database.
+// It verifies all required tables exist, then writes all rows within a transaction.
+// For POST/PUT actions, uses INSERT with ON CONFLICT UPDATE (upsert).
+// For PATCH actions, uses UPDATE with COALESCE to preserve existing values.
 func (this *Postgres) WriteRelational(action ifs.Action, data *l8orms.L8OrmRData) error {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
@@ -42,6 +46,9 @@ func (this *Postgres) WriteRelational(action ifs.Action, data *l8orms.L8OrmRData
 	return nil
 }
 
+// writeData writes all table data within a single database transaction.
+// It iterates through all tables and rows, executing the appropriate
+// insert or update statements based on the action.
 func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) error {
 	var tx *sql.Tx
 	var er error
@@ -95,6 +102,9 @@ func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) erro
 	return nil
 }
 
+// Write converts Go objects to relational data and persists them to the database.
+// It invalidates the query cache after writing, and processes large element sets
+// in batches (default 500 elements per batch) to avoid memory issues.
 func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources ifs.IResources) error {
 	// Invalidate the index cache on write
 	defer this.invalidateIndex()

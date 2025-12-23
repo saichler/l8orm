@@ -24,6 +24,9 @@ import (
 	"github.com/saichler/l8types/go/types/l8reflect"
 )
 
+// NewRelationsDataForQuery creates an L8OrmRData structure initialized for a query.
+// It builds the table schema based on the query's root type and requested properties.
+// Only the tables needed for the query's projections are included.
 func NewRelationsDataForQuery(query ifs.IQuery) (*l8orms.L8OrmRData, error) {
 	rlData := &l8orms.L8OrmRData{}
 	rlData.RootTypeName = query.RootType().TypeName
@@ -38,6 +41,9 @@ func NewRelationsDataForQuery(query ifs.IQuery) (*l8orms.L8OrmRData, error) {
 	return rlData, err
 }
 
+// NewRelationalDataForType creates an L8OrmRData structure for a given type name.
+// It builds the complete table schema including all nested struct types.
+// This is useful for creating the relational structure without a query context.
 func NewRelationalDataForType(typeName string, introspector ifs.IIntrospector) (*l8orms.L8OrmRData, error) {
 	node, ok := introspector.NodeByTypeName(typeName)
 	if !ok {
@@ -50,6 +56,9 @@ func NewRelationalDataForType(typeName string, introspector ifs.IIntrospector) (
 	return rlData, err
 }
 
+// addTable adds a table to the relational data structure for the given node.
+// If properties are specified, only those columns are added; otherwise all non-struct
+// attributes become columns. Nested struct attributes trigger recursive table creation.
 func addTable(node *l8reflect.L8Node, rlData *l8orms.L8OrmRData, properties ...string) error {
 	_, ok := rlData.Tables[node.TypeName]
 	if ok && properties == nil {
@@ -97,9 +106,16 @@ func addTable(node *l8reflect.L8Node, rlData *l8orms.L8OrmRData, properties ...s
 	return nil
 }
 
+// attributes caches lowercase-to-original attribute name mappings per type.
+// This enables case-insensitive property name resolution.
 var attributes = make(map[string]map[string]string)
+
+// mtx protects the attributes cache for concurrent access.
 var mtx = &sync.RWMutex{}
 
+// getAttrName resolves a property name to its actual attribute name in the node.
+// It handles dotted property paths (e.g., "Sub.Field") by extracting the first component
+// and returning the remainder as the sub-property. Case-insensitive matching is used.
 func getAttrName(property string, node *l8reflect.L8Node) (string, string) {
 	var attrName string
 	var attrProp string
@@ -136,6 +152,9 @@ func getAttrName(property string, node *l8reflect.L8Node) (string, string) {
 	return attrName, attrProp
 }
 
+// SetColumns initializes the column map for a table based on the node's attributes.
+// Each non-struct attribute becomes a column with a unique index.
+// This function is idempotent - it only sets columns if they haven't been set.
 func SetColumns(table *l8orms.L8OrmTable, node *l8reflect.L8Node) {
 	if table.Columns == nil {
 		table.Columns = make(map[string]int32)
@@ -148,6 +167,8 @@ func SetColumns(table *l8orms.L8OrmTable, node *l8reflect.L8Node) {
 	}
 }
 
+// addColumn adds a single column to a table's schema.
+// The column index is automatically assigned based on the current column count.
 func addColumn(table *l8orms.L8OrmTable, attrName string) {
 	if table.Columns == nil {
 		table.Columns = make(map[string]int32)

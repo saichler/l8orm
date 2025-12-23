@@ -27,6 +27,8 @@ import (
 	"github.com/saichler/l8types/go/testtypes"
 )
 
+// TestConvert tests bidirectional conversion (object to relational and back).
+// Verifies that an object survives the round-trip conversion without data loss.
 func TestConvert(t *testing.T) {
 	before := utils.CreateTestModelInstance(1)
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
@@ -67,6 +69,8 @@ func TestConvert(t *testing.T) {
 	}
 }
 
+// TestConvertMultiValue tests conversion of multiple objects in a single operation.
+// Verifies that multiple instances are correctly converted and reconstructed.
 func TestConvertMultiValue(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)
@@ -114,6 +118,8 @@ func TestConvertMultiValue(t *testing.T) {
 	}
 }
 
+// TestConvertMultiValueNoKey tests conversion of multiple objects without primary keys.
+// Verifies that objects can be matched and compared without explicit key decorators.
 func TestConvertMultiValueNoKey(t *testing.T) {
 	before1 := utils.CreateTestModelInstance(1)
 	before2 := utils.CreateTestModelInstance(2)

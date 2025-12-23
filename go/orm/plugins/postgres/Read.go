@@ -26,6 +26,9 @@ import (
 	"strings"
 )
 
+// ReadRelational executes a query and returns raw relational data.
+// It fetches data from all tables in the query's type hierarchy and
+// returns the results as L8OrmRData along with metadata (record counts).
 func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, *l8api.L8MetaData, error) {
 	data, err := convert.NewRelationsDataForQuery(query)
 	if err != nil {
@@ -103,6 +106,8 @@ func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, *l8a
 	return data, rootTableStatement.MetaData(tx), nil
 }
 
+// nameOfField extracts the field name from a RecKey by removing the bracketed portion.
+// For example, "MyField[123]" returns "MyField".
 func nameOfField(recKey string) string {
 	index := strings.Index(recKey, "[")
 	if index == -1 {
@@ -111,6 +116,7 @@ func nameOfField(recKey string) string {
 	return recKey[0:index]
 }
 
+// readRows scans all rows from a SQL result set into L8OrmRow structures.
 func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8orms.L8OrmRow, error) {
 	result := make([]*l8orms.L8OrmRow, 0)
 	for rows.Next() {
@@ -123,6 +129,9 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8
 	return result, nil
 }
 
+// Read executes a query and returns the results as Go objects.
+// For paginated queries (with Limit > 0), it uses the in-memory index cache.
+// For non-paginated queries, it performs a direct database read.
 func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
 	// Check if this query benefits from indexing (has Limit for pagination)
 	if q.Limit() > 0 {
@@ -136,7 +145,9 @@ func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements
 	return convert.ConvertFrom(object.New(nil, relData), metadata, resources)
 }
 
-// readWithIndex uses the in-memory primary index for paginated queries
+// readWithIndex uses the in-memory primary index for paginated queries.
+// It caches the full query result's RecKeys and serves page requests from cache.
+// Cache entries are invalidated on writes and expired via TTL.
 func (this *Postgres) readWithIndex(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
 	this.indexMtx.RLock()
 	cached, exists := this.indexQueries[q.Hash()]
@@ -170,7 +181,9 @@ func (this *Postgres) readWithIndex(q ifs.IQuery, resources ifs.IResources) ifs.
 	return this.readByRecKeys(q, cached.pageKeys(q.Page(), q.Limit()), metadata, resources)
 }
 
-// readRecKeys fetches only RecKeys for the root table (for cache population)
+// readRecKeys fetches only RecKeys for the root table (for cache population).
+// This lightweight query is used to populate the pagination index without
+// fetching all column data.
 func (this *Postgres) readRecKeys(query ifs.IQuery) ([]string, *l8api.L8MetaData, error) {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
@@ -221,7 +234,9 @@ func (this *Postgres) readRecKeys(query ifs.IQuery) ([]string, *l8api.L8MetaData
 	return recKeys, metadata, nil
 }
 
-// readByRecKeys fetches full row data for specific RecKeys (for pagination)
+// readByRecKeys fetches full row data for specific RecKeys (for pagination).
+// After getting the page's RecKeys from the cache, this method fetches the
+// complete row data for just those records.
 func (this *Postgres) readByRecKeys(query ifs.IQuery, recKeys []string, metadata *l8api.L8MetaData, resources ifs.IResources) ifs.IElements {
 	if len(recKeys) == 0 {
 		return object.NewQueryResult(nil, metadata)
@@ -311,7 +326,8 @@ func (this *Postgres) readByRecKeys(query ifs.IQuery, recKeys []string, metadata
 	return convert.ConvertFrom(object.New(nil, data), metadata, resources)
 }
 
-// parentKeyMatchesRecKeys checks if a child's ParentKey contains one of the root RecKeys
+// parentKeyMatchesRecKeys checks if a child's ParentKey contains one of the root RecKeys.
+// This is used to filter child table rows when fetching paginated data.
 func (this *Postgres) parentKeyMatchesRecKeys(parentKey string, recKeys []string) bool {
 	for _, recKey := range recKeys {
 		if strings.Contains(parentKey, recKey) {
@@ -321,7 +337,8 @@ func (this *Postgres) parentKeyMatchesRecKeys(parentKey string, recKeys []string
 	return false
 }
 
-// addRowToTable adds a row to the table's nested structure
+// addRowToTable adds a row to the table's nested structure.
+// It initializes any missing intermediate structures (InstanceRows, AttributeRows).
 func (this *Postgres) addRowToTable(table *l8orms.L8OrmTable, row *l8orms.L8OrmRow) {
 	fldName := nameOfField(row.RecKey)
 	if table.InstanceRows == nil {

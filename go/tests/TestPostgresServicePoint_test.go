@@ -29,6 +29,8 @@ import (
 	"github.com/saichler/l8types/go/testtypes"
 )
 
+// TestPostgresService tests the OrmService as a distributed Layer 8 service.
+// Verifies that POST and GET operations work correctly through the service mesh.
 func TestPostgresService(t *testing.T) {
 	time.Sleep(time.Second * 2)
 	db := openDBConection()
@@ -92,6 +94,8 @@ func TestPostgresService(t *testing.T) {
 	}
 }
 
+// TestPostgresServiceReplication tests OrmService with multiple replicas.
+// Verifies data consistency across replicated service instances.
 func TestPostgresServiceReplication(t *testing.T) {
 	db := openDBConection()
 	defer cleanup(db)
@@ -170,6 +174,8 @@ func TestPostgresServiceReplication(t *testing.T) {
 	fmt.Println(len(elems.Elements()))
 }
 
+// checkResponse validates that a response matches the expected object.
+// Used by tests to verify data integrity after database operations.
 func checkResponse(elems ifs.IElements, resources ifs.IResources, before *testtypes.TestProto, t *testing.T) bool {
 	if elems.Error() != nil {
 		Log.Fail(t, elems.Error())

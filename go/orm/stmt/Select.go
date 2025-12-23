@@ -22,6 +22,8 @@ import (
 	"reflect"
 )
 
+// SelectStatement returns a prepared SELECT statement for this table.
+// The statement is created lazily and cached for subsequent calls.
 func (this *Statement) SelectStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	if this.selectStmt == nil {
 		err := this.createSelectStatement(tx)
@@ -32,6 +34,9 @@ func (this *Statement) SelectStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	return this.selectStmt, nil
 }
 
+// createSelectStatement generates and prepares the SELECT SQL statement.
+// If a query is provided, it generates SQL from the query; otherwise it
+// selects all columns from the table.
 func (this *Statement) createSelectStatement(tx *sql.Tx) error {
 	var sel *strings.String
 	if this.query != nil {
@@ -64,6 +69,8 @@ func (this *Statement) createSelectStatement(tx *sql.Tx) error {
 	return nil
 }
 
+// Row scans a single row from a SQL result set into an L8OrmRow.
+// It handles type conversions and serializes values for storage.
 func (this *Statement) Row(rows *sql.Rows) (*l8orms.L8OrmRow, error) {
 	args, err := this.NewArgs()
 	vals := make([]interface{}, len(args))
@@ -107,6 +114,8 @@ func (this *Statement) Row(rows *sql.Rows) (*l8orms.L8OrmRow, error) {
 	return row, nil
 }
 
+// NewArgs creates a slice of pointers for scanning row values from SQL results.
+// Each pointer is typed according to the corresponding column's type.
 func (this *Statement) NewArgs() ([]interface{}, error) {
 	args := make([]interface{}, len(this.fields))
 	parentKey := ""

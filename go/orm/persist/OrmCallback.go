@@ -19,6 +19,10 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 )
 
+// Before is called before a database operation is executed.
+// It invokes the service callback's Before method for each element, allowing
+// custom validation, transformation, or cancellation of the operation.
+// Returns the potentially modified elements and a boolean indicating whether to proceed.
 func (this *OrmService) Before(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) (ifs.IElements, bool) {
 	if this.sla.Callback() != nil {
 		elems := make([]interface{}, 0)
@@ -51,6 +55,10 @@ func (this *OrmService) Before(action ifs.Action, pb ifs.IElements, vnic ifs.IVN
 	return pb, true
 }
 
+// After is called after a database operation has completed.
+// It invokes the service callback's After method for each element, allowing
+// post-processing, logging, or notification of the completed operation.
+// Returns the potentially modified elements and a boolean indicating success.
 func (this *OrmService) After(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) (ifs.IElements, bool) {
 	if this.sla.Callback() != nil {
 		elems := make([]interface{}, len(pb.Elements()))

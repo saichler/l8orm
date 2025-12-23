@@ -19,6 +19,8 @@ import (
 	"github.com/saichler/l8types/go/types/l8api"
 )
 
+// MetaData executes a COUNT query and returns metadata with total record count.
+// This is used to provide pagination information (total records) in query results.
 func (this *Statement) MetaData(tx *sql.Tx) *l8api.L8MetaData {
 	stmt, err := this.metadataStatement(tx)
 	if err != nil {
@@ -43,6 +45,8 @@ func (this *Statement) MetaData(tx *sql.Tx) *l8api.L8MetaData {
 	return metadata
 }
 
+// metadataStatement returns a prepared COUNT statement for the table.
+// The statement is created lazily and cached for subsequent calls.
 func (this *Statement) metadataStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	if this.metaDataStmt == nil {
 		err := this.createMetadataStatement(tx)
@@ -53,6 +57,7 @@ func (this *Statement) metadataStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	return this.metaDataStmt, nil
 }
 
+// createMetadataStatement generates and prepares a COUNT SQL statement.
 func (this *Statement) createMetadataStatement(tx *sql.Tx) error {
 	sql := this.Query2CountSql(this.query, this.node.TypeName)
 	st, err := tx.Prepare(sql)

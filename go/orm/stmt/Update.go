@@ -20,6 +20,8 @@ import (
 	"strconv"
 )
 
+// UpdateStatement returns a prepared UPDATE statement for PATCH operations.
+// The statement is created lazily and cached for subsequent calls.
 func (this *Statement) UpdateStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	if this.updateStmt == nil {
 		err := this.createUpdateStatement(tx)
@@ -30,6 +32,9 @@ func (this *Statement) UpdateStatement(tx *sql.Tx) (*sql.Stmt, error) {
 	return this.updateStmt, nil
 }
 
+// createUpdateStatement generates and prepares an UPDATE SQL statement with COALESCE.
+// COALESCE ensures that NULL parameter values preserve existing column values,
+// enabling partial updates where only non-null fields are modified.
 func (this *Statement) createUpdateStatement(tx *sql.Tx) error {
 	if this.fields == nil {
 		this.fields, this.values = fieldsOf(this.node)

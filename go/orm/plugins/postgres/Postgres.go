@@ -12,6 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+// Package postgres provides a PostgreSQL implementation of the IORM interface.
+// It handles database connections, table creation, query execution, and includes
+// an in-memory query cache with TTL support for optimized pagination performance.
 package postgres
 
 import (
@@ -29,18 +33,23 @@ import (
 	"github.com/saichler/l8utils/go/utils/strings"
 )
 
-// cachedQuery represents a cached query with its sorted RecKey array
+// cachedQuery represents a cached query result with its sorted RecKey array.
+// This cache enables efficient pagination by storing the full result set's keys
+// and serving page requests from memory rather than re-querying the database.
 type cachedQuery struct {
-	recKeys  []string
-	stamp    int64
-	lastUsed int64
-	metadata *l8api.L8MetaData
+	recKeys  []string            // Sorted array of record keys for the query
+	stamp    int64               // Cache creation timestamp for invalidation
+	lastUsed int64               // Last access time for TTL cleanup
+	metadata *l8api.L8MetaData   // Query metadata (total count, etc.)
 }
 
+// touch updates the lastUsed timestamp to prevent TTL expiration.
 func (cq *cachedQuery) touch() {
 	atomic.StoreInt64(&cq.lastUsed, time.Now().Unix())
 }
 
+// pageKeys returns the subset of record keys for the requested page.
+// If limit is 0 or negative, all keys are returned.
 func (cq *cachedQuery) pageKeys(page, limit int32) []string {
 	if limit <= 0 {
 		return cq.recKeys
@@ -56,21 +65,27 @@ func (cq *cachedQuery) pageKeys(page, limit int32) []string {
 	return cq.recKeys[start:end]
 }
 
+// Postgres implements the IORM interface for PostgreSQL databases.
+// It provides connection pooling, automatic table creation, query caching,
+// and batch write support for efficient database operations.
 type Postgres struct {
-	db        *sql.DB
-	verifyed  map[string]bool
-	mtx       *sync.Mutex
-	res       ifs.IResources
-	batchSize int
+	db        *sql.DB              // Database connection pool
+	verifyed  map[string]bool      // Tracks verified/created tables
+	mtx       *sync.Mutex          // Protects database operations
+	res       ifs.IResources       // Layer 8 resources (introspector, registry, etc.)
+	batchSize int                  // Maximum elements per write batch
 
-	// Primary index for paging
-	indexMtx      *sync.RWMutex
-	indexQueries  map[string]*cachedQuery
-	indexStamp    int64
-	indexTTL      int64
-	indexStopCh   chan struct{}
+	// Primary index for paging - caches query results for pagination
+	indexMtx      *sync.RWMutex              // Protects index cache
+	indexQueries  map[string]*cachedQuery    // Query hash -> cached results
+	indexStamp    int64                      // Global invalidation stamp
+	indexTTL      int64                      // Cache entry TTL in seconds
+	indexStopCh   chan struct{}              // Signal to stop TTL cleaner
 }
 
+// NewPostgres creates a new PostgreSQL ORM instance with the given database connection.
+// It initializes the query cache with a 30-second TTL and starts a background
+// goroutine to clean up expired cache entries every 10 seconds.
 func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 	p := &Postgres{
 		db:           db,
@@ -88,6 +103,9 @@ func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 	return p
 }
 
+// indexTTLCleaner runs in a goroutine to periodically remove expired cache entries.
+// It checks every 10 seconds and removes entries that haven't been accessed
+// within the TTL window.
 func (this *Postgres) indexTTLCleaner() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
@@ -101,6 +119,7 @@ func (this *Postgres) indexTTLCleaner() {
 	}
 }
 
+// cleanExpiredQueries removes cache entries that have exceeded their TTL.
 func (this *Postgres) cleanExpiredQueries() {
 	this.indexMtx.Lock()
 	defer this.indexMtx.Unlock()
@@ -112,12 +131,16 @@ func (this *Postgres) cleanExpiredQueries() {
 	}
 }
 
+// invalidateIndex marks all cached queries as stale by updating the global stamp.
+// Called after write or delete operations to ensure cache consistency.
 func (this *Postgres) invalidateIndex() {
 	this.indexMtx.Lock()
 	defer this.indexMtx.Unlock()
 	this.indexStamp = time.Now().Unix()
 }
 
+// collectTables recursively collects all table names needed for a type hierarchy.
+// It traverses nested struct attributes to find all related table types.
 func collectTables(node *l8reflect.L8Node, tables map[string]bool) {
 	tables[node.TypeName] = true
 	if node.Attributes != nil {
@@ -132,6 +155,8 @@ func collectTables(node *l8reflect.L8Node, tables map[string]bool) {
 	}
 }
 
+// verifyTables ensures all required tables exist in the database.
+// It checks each table in the type hierarchy and creates missing tables.
 func (this *Postgres) verifyTables(rootNode *l8reflect.L8Node) error {
 	tables := make(map[string]bool)
 	collectTables(rootNode, tables)
@@ -148,6 +173,8 @@ func (this *Postgres) verifyTables(rootNode *l8reflect.L8Node) error {
 	return nil
 }
 
+// verifyTable checks if a table exists and creates it if not.
+// Uses a test query to detect non-existent tables.
 func (this *Postgres) verifyTable(tableName string) error {
 	q := strings.New("select * from ", tableName, " where false;")
 	_, err := this.db.Exec(q.String())
@@ -157,6 +184,9 @@ func (this *Postgres) verifyTable(tableName string) error {
 	return err
 }
 
+// createTable generates and executes DDL to create a table for the given type.
+// It creates columns for all non-struct attributes and adds a composite primary
+// key (ParentKey, RecKey). Non-unique indexes are created for decorated fields.
 func (this *Postgres) createTable(tableName string) error {
 	q := strings.New("create table ", tableName, " (\n")
 	q.Add("ParentKey text,\n")
@@ -197,6 +227,8 @@ func (this *Postgres) createTable(tableName string) error {
 	return nil
 }
 
+// postgresTypeOf maps Go types to PostgreSQL column types.
+// Maps and slices are stored as text (serialized), and enums default to integer.
 func postgresTypeOf(node *l8reflect.L8Node) string {
 	if node.IsMap || node.IsSlice {
 		return "text"
@@ -219,6 +251,7 @@ func postgresTypeOf(node *l8reflect.L8Node) string {
 	return "integer"
 }
 
+// Close stops the TTL cleaner goroutine and closes the database connection.
 func (this *Postgres) Close() error {
 	close(this.indexStopCh)
 	this.db.Close()

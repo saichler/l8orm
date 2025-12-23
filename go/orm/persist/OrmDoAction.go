@@ -20,6 +20,9 @@ import (
 	"github.com/saichler/l8types/go/types/l8web"
 )
 
+// do executes a database write operation (POST, PUT, PATCH) with callback support.
+// It follows the pattern: Before callbacks -> ORM write -> After callbacks.
+// Returns an empty response on success, or an error response on failure.
 func (this *OrmService) do(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	pbBefore, cont := this.Before(action, pb, vnic)
 	if !cont {

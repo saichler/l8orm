@@ -30,6 +30,8 @@ import (
 	"github.com/saichler/l8types/go/testtypes"
 )
 
+// TestPostgres tests direct PostgreSQL write and read operations.
+// Verifies that objects survive the complete round-trip through the database.
 func TestPostgres(t *testing.T) {
 	db := openDBConection()
 	defer cleanup(db)
@@ -105,6 +107,8 @@ func TestPostgres(t *testing.T) {
 	}
 }
 
+// TestPostgresFields tests selective field projection in queries.
+// Verifies that only requested fields are populated in results.
 func TestPostgresFields(t *testing.T) {
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	ok, db, p := writeRecords(100, res, t)
@@ -145,6 +149,8 @@ func TestPostgresFields(t *testing.T) {
 	}
 }
 
+// TestPostgresCriteria tests query filtering with WHERE criteria.
+// Verifies that criteria are correctly translated to SQL and filter results.
 func TestPostgresCriteria(t *testing.T) {
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)
 	ok, db, p := writeRecords(100, res, t)

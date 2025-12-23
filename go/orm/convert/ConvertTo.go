@@ -26,6 +26,10 @@ import (
 	"github.com/saichler/l8utils/go/utils/strings"
 )
 
+// ConvertTo transforms Go objects into relational data format (L8OrmRData).
+// It flattens the object hierarchy into tables, with each struct type becoming a table
+// and nested structs stored in separate tables linked by parent keys.
+// The action parameter (POST/PATCH) affects how zero values are handled.
 func ConvertTo(action ifs.Action, objects ifs.IElements, res ifs.IResources) ifs.IElements {
 	if objects == nil {
 		return nil
@@ -71,6 +75,10 @@ func ConvertTo(action ifs.Action, objects ifs.IElements, res ifs.IResources) ifs
 	return object.New(nil, data)
 }
 
+// TypeOf extracts the element type name from a reflect.Value.
+// For slices and maps, it returns the element type name.
+// For pointers, it returns the pointed-to type name.
+// For structs, it returns the struct type name directly.
 func TypeOf(v reflect.Value) string {
 	if v.Kind() == reflect.Slice || v.Kind() == reflect.Map {
 		return v.Type().Elem().Elem().Name()
@@ -85,6 +93,10 @@ func TypeOf(v reflect.Value) string {
 	panic("Unknown type: " + v.Type().Name())
 }
 
+// convertTo recursively converts a single Go value into relational table rows.
+// It handles struct fields by storing simple values in columns and recursively
+// processing nested structs, slices, and maps into their respective tables.
+// For PATCH actions, zero values are skipped to enable partial updates.
 func convertTo(action ifs.Action, value reflect.Value, parentKey, myKey string, node *l8reflect.L8Node, data *l8orms.L8OrmRData, res ifs.IResources) error {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
@@ -157,6 +169,9 @@ func convertTo(action ifs.Action, value reflect.Value, parentKey, myKey string, 
 	return nil
 }
 
+// TableAndRowsCreate creates or retrieves the table and attribute rows for a given node.
+// It initializes all necessary nested structures in the relational data hierarchy.
+// Unlike TableAndRowsGet, this function creates missing structures rather than returning nil.
 func TableAndRowsCreate(node *l8reflect.L8Node, data *l8orms.L8OrmRData, parentKey string) (*l8orms.L8OrmTable, *l8orms.L8OrmAttributeRows) {
 	table, ok := data.Tables[node.TypeName]
 	if !ok {
@@ -186,6 +201,8 @@ func TableAndRowsCreate(node *l8reflect.L8Node, data *l8orms.L8OrmRData, parentK
 	return table, attributeRows
 }
 
+// SetValueToRow serializes a field value and stores it in the row's column values.
+// The value is serialized using the L8 serialization framework for efficient storage.
 func SetValueToRow(row *l8orms.L8OrmRow, col int32, val reflect.Value) error {
 	obj := object.NewEncode()
 	err := obj.Add(val.Interface())
@@ -196,6 +213,9 @@ func SetValueToRow(row *l8orms.L8OrmRow, col int32, val reflect.Value) error {
 	return nil
 }
 
+// RecKey generates the record key for a row in the format "FieldName[key]".
+// If the struct has a primary key decorator, that key is used.
+// Otherwise, the myKey parameter (slice index or map key) is used.
 func RecKey(node *l8reflect.L8Node, value reflect.Value, myKey string, res ifs.IResources) string {
 	key, _, _ := res.Introspector().Decorators().PrimaryKeyDecoratorFromValue(node, value)
 	if key == "" {
@@ -213,6 +233,8 @@ func RecKey(node *l8reflect.L8Node, value reflect.Value, myKey string, res ifs.I
 	}
 }
 
+// KeyForRow concatenates the ParentKey and RecKey to form the full hierarchical key.
+// This composite key is used as the parent key for child rows in nested structures.
 func KeyForRow(row *l8orms.L8OrmRow) string {
 	buff := bytes.Buffer{}
 	buff.WriteString(row.ParentKey)
