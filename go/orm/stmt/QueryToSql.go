@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/saichler/l8types/go/ifs"
 	"reflect"
+	"strings"
 )
 
 // Query2CountSql generates a SELECT COUNT(*) SQL string from a query.
@@ -184,15 +185,27 @@ func comparator(comp ifs.IComparator, typeName string) (bool, string) {
 	buff := bytes.Buffer{}
 	if leftString && !rightString {
 		buff.WriteString(comp.Left())
-		buff.WriteString(comp.Operator())
+		rightValue := stripQuotes(comp.Right())
+		convertedValue, hasWildcard := convertWildcard(rightValue)
+		if hasWildcard && comp.Operator() == "=" {
+			buff.WriteString(" LIKE ")
+		} else {
+			buff.WriteString(comp.Operator())
+		}
 		buff.WriteString("'")
-		buff.WriteString(stripQuotes(comp.Right()))
+		buff.WriteString(convertedValue)
 		buff.WriteString("'")
 	} else if !leftString && rightString {
+		leftValue := stripQuotes(comp.Left())
+		convertedValue, hasWildcard := convertWildcard(leftValue)
 		buff.WriteString("'")
-		buff.WriteString(stripQuotes(comp.Left()))
+		buff.WriteString(convertedValue)
 		buff.WriteString("'")
-		buff.WriteString(comp.Operator())
+		if hasWildcard && comp.Operator() == "=" {
+			buff.WriteString(" LIKE ")
+		} else {
+			buff.WriteString(comp.Operator())
+		}
 		buff.WriteString(comp.Right())
 	} else {
 		buff.WriteString(comp.Left())
@@ -219,6 +232,15 @@ func stripQuotes(s string) string {
 		}
 	}
 	return s
+}
+
+// convertWildcard checks if a value contains a wildcard (*) and converts it to SQL LIKE syntax (%).
+// Returns the converted value and true if a wildcard was found, otherwise returns the original value and false.
+func convertWildcard(value string) (string, bool) {
+	if strings.Contains(value, "*") {
+		return strings.ReplaceAll(value, "*", "%"), true
+	}
+	return value, false
 }
 
 // Query2RecKeysSql generates SQL to fetch only RecKeys without LIMIT/OFFSET.
