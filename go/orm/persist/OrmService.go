@@ -29,8 +29,8 @@ import (
 // It handles service lifecycle, request routing, and transaction management
 // for database operations exposed through the service mesh.
 type OrmService struct {
-	orm common.IORM                   // The underlying ORM implementation
-	sla *ifs.ServiceLevelAgreement    // Service configuration and metadata
+	orm common.IORM                // The underlying ORM implementation
+	sla *ifs.ServiceLevelAgreement // Service configuration and metadata
 }
 
 // Activate is a convenience function to register an OrmService with the service mesh.
@@ -89,10 +89,12 @@ func (this *OrmService) Post(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 func (this *OrmService) Put(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return this.do(ifs.PUT, pb, vnic)
 }
+
 // Patch handles PATCH requests for partial updates to existing records.
 func (this *OrmService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return this.do(ifs.PATCH, pb, vnic)
 }
+
 // Delete handles DELETE requests to remove records matching a query or filter.
 // Supports both query-based deletion and filter mode using an example object.
 func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
@@ -113,6 +115,7 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	err = this.orm.Delete(query, vnic.Resources())
 	return object.New(err, nil)
 }
+
 // Get handles GET requests to retrieve records from the database.
 // Supports both query-based retrieval and filter mode using an example object.
 func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
@@ -136,10 +139,12 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	}
 	return this.orm.Read(query, vnic.Resources())
 }
+
 // GetCopy handles copy requests. Currently not implemented.
 func (this *OrmService) GetCopy(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	return nil
 }
+
 // Failed handles failure notifications from the service mesh. Currently not implemented.
 func (this *OrmService) Failed(pb ifs.IElements, vnic ifs.IVNic, msg *ifs.Message) ifs.IElements {
 	return nil
@@ -156,11 +161,13 @@ func (this *OrmService) TransactionConfig() ifs.ITransactionConfig {
 func (this *OrmService) Replication() bool {
 	return false
 }
+
 // ReplicationCount returns the number of replicas for this service.
 // Returns 0 as replication is not enabled by default.
 func (this *OrmService) ReplicationCount() int {
 	return 0
 }
+
 // Voter returns whether this service participates in consensus voting.
 // Returns true to enable distributed consensus for write operations.
 func (this *OrmService) Voter() bool {
@@ -200,14 +207,4 @@ func (this *OrmService) KeyOf(elements ifs.IElements, resources ifs.IResources) 
 // Delegates to the service level agreement's web service configuration.
 func (this *OrmService) WebService() ifs.IWebService {
 	return this.sla.WebService()
-	/*
-		fmt.Println("Web Service ", this.serviceName, " ", this.serviceArea)
-		return web.New(this.serviceName, this.serviceArea,
-			nil, nil,
-			nil, nil,
-			nil, nil,
-			nil, nil,
-			&l8api.L8Query{}, this.elem)
-	*/
-	return nil
 }
