@@ -61,6 +61,8 @@ func convertFrom(node *l8reflect.L8Node, parentKey string, data *l8orms.L8OrmRDa
 	}
 
 	rows := make(map[string]interface{}, 0)
+	// Track insertion order for root queries to preserve sort order
+	orderedInstances := make([]interface{}, 0, len(attributeRows.Rows))
 	subTableAttributes := make(map[string]*l8reflect.L8Node)
 	subAttributesFull := false
 	for _, row := range attributeRows.Rows {
@@ -99,6 +101,7 @@ func convertFrom(node *l8reflect.L8Node, parentKey string, data *l8orms.L8OrmRDa
 
 		subAttributesFull = true
 		rows[row.RecKey] = instance
+		orderedInstances = append(orderedInstances, instance)
 	}
 
 	if node.IsSlice {
@@ -113,6 +116,11 @@ func convertFrom(node *l8reflect.L8Node, parentKey string, data *l8orms.L8OrmRDa
 			panic(node.FieldName)
 		}
 		return v, e
+	}
+	// For root queries (parentKey is empty), return ordered slice to preserve sort order.
+	// For child struct queries, return map (used by SetValueFromSubTable).
+	if parentKey == "" {
+		return orderedInstances, nil
 	}
 	return rows, nil
 }
