@@ -318,8 +318,18 @@ func (this *Postgres) readByRecKeys(query ifs.IQuery, recKeys []string, metadata
 			return object.NewError(err.Error())
 		}
 
+		// Sort dataRow according to recKeyOrder to preserve sort order from cache
+		sortedRows := make([]*l8orms.L8OrmRow, len(dataRow))
 		for _, row := range dataRow {
-			this.addRowToTable(table, row)
+			if idx, ok := recKeyOrder[row.RecKey]; ok {
+				sortedRows[idx] = row
+			}
+		}
+		// Add sorted rows to table (skip any nil entries from mismatched keys)
+		for _, row := range sortedRows {
+			if row != nil {
+				this.addRowToTable(table, row)
+			}
 		}
 	}
 
