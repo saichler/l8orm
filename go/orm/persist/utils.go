@@ -4,7 +4,7 @@
 Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
 You may obtain a copy of the License at:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@ package persist
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/saichler/l8ql/go/gsql/interpreter"
@@ -53,9 +52,7 @@ func ElementToQuery(pb ifs.IElements, elem interface{}, vnic ifs.IVNic) (ifs.IQu
 				} else {
 					gsql.Add(v.String())
 				}
-
 			}
-			fmt.Println(gsql)
 			q, e := interpreter.NewQuery(gsql.String(), vnic.Resources())
 			return q, e
 		}
