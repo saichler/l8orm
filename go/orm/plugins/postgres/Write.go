@@ -50,31 +50,28 @@ func (this *Postgres) WriteRelational(action ifs.Action, data *l8orms.L8OrmRData
 // It iterates through all tables and rows, executing the appropriate
 // insert or update statements based on the action.
 func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) error {
-	var tx *sql.Tx
-	var er error
-
-	tx, er = this.db.Begin()
-	if er != nil {
-		return er
+	tx, err := this.db.Begin()
+	if err != nil {
+		return err
 	}
 
 	defer func() {
-		if er != nil {
-			er = tx.Rollback()
+		if err != nil {
+			tx.Rollback()
 		} else {
-			er = tx.Commit()
+			err = tx.Commit()
 		}
 	}()
 
 	for tableName, table := range data.Tables {
 		node, ok := this.res.Introspector().NodeByTypeName(tableName)
 		if !ok {
-			return errors.New("No node was found for " + tableName)
+			err = errors.New("No node was found for " + tableName)
+			return err
 		}
 		statement := stmt.NewStatement(node, table.Columns, nil, this.res.Registry())
 
 		var sqlStmt *sql.Stmt
-		var err error
 		if action == ifs.PATCH {
 			sqlStmt, err = statement.UpdateStatement(tx)
 		} else {
@@ -89,10 +86,12 @@ func (this *Postgres) writeData(action ifs.Action, data *l8orms.L8OrmRData) erro
 				for _, row := range attrRows.Rows {
 					args, e := statement.RowValues(action, row)
 					if e != nil {
+						err = e
 						return err
 					}
 					_, e = sqlStmt.Exec(args...)
 					if e != nil {
+						err = e
 						return err
 					}
 				}
