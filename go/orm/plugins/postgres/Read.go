@@ -38,6 +38,14 @@ func (this *Postgres) ReadRelational(query ifs.IQuery) (*l8orms.L8OrmRData, *l8a
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
 
+	rootNode, ok := this.res.Introspector().NodeByTypeName(query.RootType().TypeName)
+	if ok {
+		err = this.verifyTables(rootNode)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	var tx *sql.Tx
 	var er error
 

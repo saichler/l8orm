@@ -73,7 +73,7 @@ func shutdownTopology() {
 func openDBConection() *sql.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		"127.0.0.1", 5432, "postgres", "admin", "postgres")
+		"127.0.0.1", 5432, "erp", "abcAdmin", "erp")
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
