@@ -42,7 +42,7 @@ func TestPostgresService(t *testing.T) {
 
 	serviceName := "ormsvc"
 	p := postgres.NewPostgres(db, eg2.Resources())
-	persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, "MyString")
+	persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, false, "MyString")
 
 	time.Sleep(time.Second)
 
@@ -104,7 +104,7 @@ func TestPostgresServiceReplication(t *testing.T) {
 		eg2 := topo.VnicByVnetNum(2, i)
 
 		p := postgres.NewPostgres(db, eg2.Resources())
-		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, "MyString")
+		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, false, "MyString")
 	}
 
 	time.Sleep(time.Second * 2)

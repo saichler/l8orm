@@ -42,7 +42,7 @@ func TestMissingTableEmpty(t *testing.T) {
 	for i := 1; i <= 4; i++ {
 		eg2 := topo.VnicByVnetNum(2, i)
 		p := postgres.NewPostgres(db, eg2.Resources())
-		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, "MyString")
+		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, false, "MyString")
 	}
 
 	time.Sleep(time.Second * 2)

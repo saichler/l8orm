@@ -35,18 +35,11 @@ type OrmService struct {
 	cache *cache.Cache               // Optional in-memory cache layer
 }
 
-// Activate is a convenience function to register an OrmService with the service mesh.
+// Activate registers an OrmService with the service mesh.
 // It creates the service level agreement with the specified configuration and activates
 // the service on the given virtual NIC. The keys parameter specifies primary key fields.
+// Set enableCache to true to enable an in-memory cache layer with write-through semantics.
 func Activate(serviceName string, serviceArea byte, item, itemList interface{},
-	vnic ifs.IVNic, orm common.IORM, callback ifs.IServiceCallback, keys ...string) {
-	ActivateWithCache(serviceName, serviceArea, item, itemList, vnic, orm, callback, false, keys...)
-}
-
-// ActivateWithCache is like Activate but allows enabling an in-memory cache layer.
-// When enableCache is true, the service caches elements in memory for faster reads
-// and uses write-through semantics for writes.
-func ActivateWithCache(serviceName string, serviceArea byte, item, itemList interface{},
 	vnic ifs.IVNic, orm common.IORM, callback ifs.IServiceCallback, enableCache bool, keys ...string) {
 	sla := ifs.NewServiceLevelAgreement(&OrmService{}, serviceName, serviceArea, false, callback)
 	sla.SetServiceItem(item)

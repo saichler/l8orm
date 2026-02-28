@@ -31,7 +31,7 @@ import (
 // activateCachedTargetService registers a cache-enabled ORM service for L8PTarget.
 func activateCachedTargetService(serviceName string, db *sql.DB, nic ifs.IVNic) {
 	p := postgres.NewPostgres(db, nic.Resources())
-	persist.ActivateWithCache(serviceName, 91, &l8tpollaris.L8PTarget{},
+	persist.Activate(serviceName, 91, &l8tpollaris.L8PTarget{},
 		&l8tpollaris.L8PTargetList{}, nic, p, nil, true, "TargetId")
 }
 
