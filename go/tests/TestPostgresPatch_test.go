@@ -4,7 +4,7 @@
 Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
 You may obtain a copy of the License at:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,9 @@ import (
 // TestPostgresPatch tests the PATCH operation to verify partial updates work correctly.
 // It creates a record, patches one field, and verifies other fields remain unchanged.
 func TestPostgresPatch(t *testing.T) {
-	db := openDBConection()
+	nic := topo.VnicByVnetNum(2, 2)
+	db := openDBConection(nic.Resources())
+	clean(db)
 	defer cleanup(db)
 
 	res, _ := CreateResources(25000, 1, ifs.Info_Level)

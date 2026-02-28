@@ -4,7 +4,7 @@
 Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
 You may obtain a copy of the License at:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,12 +31,13 @@ import (
 // TestMissingTableEmpty tests automatic table creation when tables don't exist.
 // Verifies that the ORM gracefully handles missing tables by creating them.
 func TestMissingTableEmpty(t *testing.T) {
-	db := openDBConection()
+	nic := topo.VnicByVnetNum(2, 2)
+	db := openDBConection(nic.Resources())
 	clean(db)
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
 
-	serviceName := "postgres"
+	serviceName := "ormempty"
 
 	for i := 1; i <= 4; i++ {
 		eg2 := topo.VnicByVnetNum(2, i)

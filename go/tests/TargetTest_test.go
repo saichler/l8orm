@@ -4,7 +4,7 @@
 Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
 You may obtain a copy of the License at:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -78,8 +78,10 @@ func TestTarget(t *testing.T) {
 		}
 	}
 
-	db := openDBConection()
+	db := openDBConection(nic.Resources())
 	defer cleanup(db)
+	// Clean up any leftover target tables from previous test runs
+	cleanTargetTables(db)
 	p := postgres.NewPostgres(db, nic.Resources())
 	err := p.Write(ifs.POST, object.New(nil, devices), nic.Resources())
 	if err != nil {
@@ -87,7 +89,7 @@ func TestTarget(t *testing.T) {
 		return
 	}
 
-	rows, err := db.Query("select count(*) from L8PTarget where state=0;")
+	rows, err := db.Query("select count(*) from L8PTarget where state=1;")
 	if err != nil {
 		nic.Resources().Logger().Fail(t, err.Error())
 		return
@@ -112,7 +114,7 @@ func TestTarget(t *testing.T) {
 		return
 	}
 
-	rows, err = db.Query("select count(*) from L8PTarget where state=1;")
+	rows, err = db.Query("select count(*) from L8PTarget where state=2;")
 	if err != nil {
 		nic.Resources().Logger().Fail(t, err.Error())
 		return
@@ -131,7 +133,7 @@ func TestTarget(t *testing.T) {
 		nic.Resources().Logger().Fail(t, err.Error())
 	}
 
-	rows, err = db.Query("select count(*) from L8PTarget where state=1;")
+	rows, err = db.Query("select count(*) from L8PTarget where state=2;")
 	if err != nil {
 		nic.Resources().Logger().Fail(t, err.Error())
 		return
@@ -153,9 +155,9 @@ func TestTargetService(t *testing.T) {
 	size := 10000
 	devices := make([]*l8tpollaris.L8PTarget, size)
 	ip := 1
-	sub := 40
+	sub := 80
 	for i := 0; i < size; i++ {
-		device := creates.CreateDevice("60.50."+strconv.Itoa(sub)+"."+strconv.Itoa(ip), common.NetworkDevice_Links_ID, "sim")
+		device := creates.CreateDevice("70.50."+strconv.Itoa(sub)+"."+strconv.Itoa(ip), common.NetworkDevice_Links_ID, "sim")
 		devices[i] = device
 		ip++
 		if ip > 254 {
@@ -165,10 +167,14 @@ func TestTargetService(t *testing.T) {
 	}
 
 	ts, _ := targets.Targets(nic)
-	ts.Post(object.New(nil, devices), nic)
+	resp := ts.Post(object.New(nil, devices), nic)
+	if resp.Error() != nil {
+		nic.Resources().Logger().Fail(t, "Post", resp.Error())
+		return
+	}
 
 	q, _ := object.NewQuery("select * from l8ptarget", nic.Resources())
-	resp := ts.Get(q, nic)
+	resp = ts.Get(q, nic)
 	if resp.Error() != nil {
 		nic.Resources().Logger().Fail(t, "Get", resp.Error())
 		return

@@ -70,10 +70,11 @@ func shutdownTopology() {
 }
 
 // openDBConection creates a connection to the local PostgreSQL test database.
-func openDBConection() *sql.DB {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+func openDBConection(r IResources) *sql.DB {
+	realdb, user, pass, port, err := r.Security().Credential("admin", "admin", r)
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		"127.0.0.1", 5432, "erp", "abcAdmin", "erp")
+		"127.0.0.1", port, user, pass, realdb)
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
@@ -103,10 +104,18 @@ func clean(db *sql.DB) {
 	}
 }
 
+// cleanTargetTables drops target-related tables to reset state before target tests.
+func cleanTargetTables(db *sql.DB) {
+	db.Exec("drop table if exists l8phostprotocol;")
+	db.Exec("drop table if exists l8phost;")
+	db.Exec("drop table if exists l8ptarget;")
+}
+
 // writeRecords is a helper that creates test records and writes them to PostgreSQL.
 // Returns the success status, database connection, and Postgres instance.
 func writeRecords(size int, res IResources, t *testing.T) (bool, *sql.DB, *postgres.Postgres) {
-	db := openDBConection()
+	db := openDBConection(res)
+	clean(db)
 	recs := make([]*testtypes.TestProto, size)
 	for i := 0; i < 100; i++ {
 		recs[i] = utils.CreateTestModelInstance(i)

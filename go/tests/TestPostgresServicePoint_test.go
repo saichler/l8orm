@@ -4,7 +4,7 @@
 Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
 You may obtain a copy of the License at:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,19 +33,14 @@ import (
 // Verifies that POST and GET operations work correctly through the service mesh.
 func TestPostgresService(t *testing.T) {
 	time.Sleep(time.Second * 2)
-	db := openDBConection()
+	nic := topo.VnicByVnetNum(2, 2)
+	db := openDBConection(nic.Resources())
+	clean(db)
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
 	eg2 := topo.VnicByVnetNum(2, 2)
 
-	/*
-		node, _ := eg1.Resources().Introspector().Inspect(&testtypes.TestProto{})
-		introspecting.AddPrimaryKeyDecorator(node, "MyString")
-
-		node, _ = eg2.Resources().Introspector().Inspect(&testtypes.TestProto{})
-		introspecting.AddPrimaryKeyDecorator(node, "MyString")
-	*/
-	serviceName := "postgres"
+	serviceName := "ormsvc"
 	p := postgres.NewPostgres(db, eg2.Resources())
 	persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, "MyString")
 
@@ -97,11 +92,13 @@ func TestPostgresService(t *testing.T) {
 // TestPostgresServiceReplication tests OrmService with multiple replicas.
 // Verifies data consistency across replicated service instances.
 func TestPostgresServiceReplication(t *testing.T) {
-	db := openDBConection()
+	nic := topo.VnicByVnetNum(2, 2)
+	db := openDBConection(nic.Resources())
+	clean(db)
 	defer cleanup(db)
 	eg1 := topo.VnicByVnetNum(1, 2)
 
-	serviceName := "postgres"
+	serviceName := "ormrepl"
 
 	for i := 1; i <= 4; i++ {
 		eg2 := topo.VnicByVnetNum(2, i)

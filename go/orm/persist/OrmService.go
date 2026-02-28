@@ -23,14 +23,16 @@ import (
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8utils/go/utils/cache"
 )
 
 // OrmService wraps an IORM implementation as a Layer 8 service.
 // It handles service lifecycle, request routing, and transaction management
 // for database operations exposed through the service mesh.
 type OrmService struct {
-	orm common.IORM                // The underlying ORM implementation
-	sla *ifs.ServiceLevelAgreement // Service configuration and metadata
+	orm   common.IORM                // The underlying ORM implementation
+	sla   *ifs.ServiceLevelAgreement // Service configuration and metadata
+	cache *cache.Cache               // Optional in-memory cache layer
 }
 
 // Activate is a convenience function to register an OrmService with the service mesh.
@@ -38,16 +40,25 @@ type OrmService struct {
 // the service on the given virtual NIC. The keys parameter specifies primary key fields.
 func Activate(serviceName string, serviceArea byte, item, itemList interface{},
 	vnic ifs.IVNic, orm common.IORM, callback ifs.IServiceCallback, keys ...string) {
+	ActivateWithCache(serviceName, serviceArea, item, itemList, vnic, orm, callback, false, keys...)
+}
+
+// ActivateWithCache is like Activate but allows enabling an in-memory cache layer.
+// When enableCache is true, the service caches elements in memory for faster reads
+// and uses write-through semantics for writes.
+func ActivateWithCache(serviceName string, serviceArea byte, item, itemList interface{},
+	vnic ifs.IVNic, orm common.IORM, callback ifs.IServiceCallback, enableCache bool, keys ...string) {
 	sla := ifs.NewServiceLevelAgreement(&OrmService{}, serviceName, serviceArea, false, callback)
 	sla.SetServiceItem(item)
 	sla.SetServiceItemList(itemList)
 	sla.SetPrimaryKeys(keys...)
-	sla.SetArgs(orm)
+	sla.SetArgs(orm, enableCache)
 	vnic.Resources().Services().Activate(sla, vnic)
 }
 
 // Activate initializes the OrmService when registered with the service mesh.
 // It configures primary key and unique key decorators, and registers necessary types.
+// If enableCache was passed via Args, initializes the in-memory cache layer.
 func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic) error {
 	vnic.Resources().Logger().Info("ORM Activated for ", sla.ServiceName(), " area ", sla.ServiceArea())
 	this.sla = sla
@@ -70,11 +81,24 @@ func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic)
 			return err
 		}
 	}
+
+	// Initialize cache if enabled
+	if len(this.sla.Args()) > 1 {
+		if enableCache, ok := this.sla.Args()[1].(bool); ok && enableCache {
+			this.cache = cache.NewCache(sla.ServiceItem(), nil, nil, vnic.Resources())
+			vnic.Resources().Logger().Info("Cache enabled for ", sla.ServiceName())
+		}
+	}
+
 	return nil
 }
 
-// DeActivate cleans up the OrmService, closing the underlying database connection.
+// DeActivate cleans up the OrmService, closing the cache and underlying database connection.
 func (this *OrmService) DeActivate() error {
+	if this.cache != nil {
+		this.cache.Close()
+		this.cache = nil
+	}
 	err := this.orm.Close()
 	this.orm = nil
 	return err
@@ -97,8 +121,11 @@ func (this *OrmService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 
 // Delete handles DELETE requests to remove records matching a query or filter.
 // Supports both query-based deletion and filter mode using an example object.
+// When cache is enabled, removes elements from cache in addition to the database.
 func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if pb.IsFilterMode() {
+		this.cacheDelete(pb.Element())
+
 		q, e := ElementToQuery(pb, this.sla.ServiceItem(), vnic)
 		if e != nil {
 			return object.NewError(e.Error())
@@ -118,26 +145,37 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 
 // Get handles GET requests to retrieve records from the database.
 // Supports both query-based retrieval and filter mode using an example object.
+// When cache is enabled, checks cache first before falling back to the database.
 func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 
 	if pb.IsFilterMode() {
+		// Try cache first for filter mode (primary key lookup)
+		if cached, ok := this.cacheGet(pb.Element()); ok {
+			return object.New(nil, cached)
+		}
+
 		q, e := ElementToQuery(pb, this.sla.ServiceItem(), vnic)
 		if e != nil {
 			return object.NewError(e.Error())
 		}
-		result := this.orm.Read(q, vnic.Resources())
+		result := this.fetchFromDbAndCache(q, vnic.Resources())
 		if result.Error() == nil {
 			return result
 		}
 		return pb
 	}
 
-	// This is a query
+	// This is a query — try cache fetch first
 	query, err := pb.Query(vnic.Resources())
 	if err != nil {
 		return object.NewError(err.Error())
 	}
-	return this.orm.Read(query, vnic.Resources())
+
+	if cached := this.cacheFetch(query); cached != nil {
+		return cached
+	}
+
+	return this.fetchFromDbAndCache(query, vnic.Resources())
 }
 
 // GetCopy handles copy requests. Currently not implemented.

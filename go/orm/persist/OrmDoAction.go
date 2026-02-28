@@ -22,7 +22,7 @@ import (
 )
 
 // do executes a database write operation (POST, PUT, PATCH) with callback support.
-// It follows the pattern: Before callbacks -> ORM write -> After callbacks.
+// It follows the pattern: Before callbacks -> Cache update -> ORM write -> After callbacks.
 // Returns an empty response on success, or an error response on failure.
 func (this *OrmService) do(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	pb = elemList(pb)
@@ -36,6 +36,9 @@ func (this *OrmService) do(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) 
 		}
 		pb = pbBefore
 	}
+
+	// Cache elements before writing to DB
+	this.cacheAction(action, pb, vnic)
 
 	err := this.orm.Write(action, pb, vnic.Resources())
 
@@ -51,6 +54,34 @@ func (this *OrmService) do(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) 
 	}
 
 	return object.New(nil, &l8web.L8Empty{})
+}
+
+// cacheAction updates the cache based on the action type.
+// For POST/PUT, caches each element. For PATCH, applies partial updates.
+func (this *OrmService) cacheAction(action ifs.Action, pb ifs.IElements, vnic ifs.IVNic) {
+	if this.cache == nil {
+		return
+	}
+	for _, elem := range pb.Elements() {
+		if elem == nil {
+			continue
+		}
+		switch action {
+		case ifs.POST, ifs.PUT:
+			this.cachePost(elem)
+		case ifs.PATCH:
+			// For patch, ensure the element exists in cache first
+			if _, ok := this.cacheGet(elem); !ok {
+				// Cache miss — fetch from DB to populate cache before patching
+				q, e := ElementToQuery(pb, this.sla.ServiceItem(), vnic)
+				if e == nil {
+					result := this.orm.Read(q, vnic.Resources())
+					this.cacheElements(result)
+				}
+			}
+			this.cachePatch(elem)
+		}
+	}
 }
 
 func elemList(pb ifs.IElements) ifs.IElements {

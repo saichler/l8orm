@@ -4,7 +4,7 @@
 Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
 You may obtain a copy of the License at:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,9 @@ import (
 // TestPostgres tests direct PostgreSQL write and read operations.
 // Verifies that objects survive the complete round-trip through the database.
 func TestPostgres(t *testing.T) {
-	db := openDBConection()
+	nic := topo.VnicByVnetNum(2, 2)
+	db := openDBConection(nic.Resources())
+	clean(db)
 	defer cleanup(db)
 
 	before1 := utils.CreateTestModelInstance(1)
