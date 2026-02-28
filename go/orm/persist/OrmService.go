@@ -78,8 +78,9 @@ func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic)
 	// Initialize cache if enabled
 	if len(this.sla.Args()) > 1 {
 		if enableCache, ok := this.sla.Args()[1].(bool); ok && enableCache {
-			this.cache = cache.NewCache(sla.ServiceItem(), nil, nil, vnic.Resources())
-			vnic.Resources().Logger().Info("Cache enabled for ", sla.ServiceName())
+			initElements := this.loadCacheInitElements(vnic)
+			this.cache = cache.NewCache(sla.ServiceItem(), initElements, nil, vnic.Resources())
+			vnic.Resources().Logger().Info("Cache enabled for ", sla.ServiceName(), " with ", len(initElements), " elements")
 		}
 	}
 

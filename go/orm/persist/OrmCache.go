@@ -18,6 +18,7 @@ import (
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
+	"reflect"
 )
 
 // cacheGet retrieves an element from the cache by its primary key.
@@ -102,6 +103,26 @@ func (this *OrmService) fetchFromDbAndCache(query ifs.IQuery, resources ifs.IRes
 	result := this.orm.Read(query, resources)
 	this.cacheElements(result)
 	return result
+}
+
+// loadCacheInitElements reads all records from the database for cache initialization.
+// Returns the elements as []interface{} to pass to NewCache's initElements parameter.
+// If the tables don't exist yet, returns nil so the cache starts empty.
+func (this *OrmService) loadCacheInitElements(vnic ifs.IVNic) []interface{} {
+	typeName := reflect.TypeOf(this.sla.ServiceItem()).Elem().Name()
+	qe, err := object.NewQuery("select * from "+typeName, vnic.Resources())
+	if err != nil {
+		return nil
+	}
+	q, err := qe.Query(vnic.Resources())
+	if err != nil {
+		return nil
+	}
+	result := this.orm.Read(q, vnic.Resources())
+	if result == nil || result.Error() != nil {
+		return nil
+	}
+	return result.Elements()
 }
 
 // cacheMetadata returns the cache metadata (counts) or nil if cache is nil.
