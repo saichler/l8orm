@@ -31,6 +31,7 @@ import (
 // for database operations exposed through the service mesh.
 type OrmService struct {
 	orm   common.IORM                // The underlying ORM implementation
+	tsdb  common.ITSDB               // Time series database plugin
 	sla   *ifs.ServiceLevelAgreement // Service configuration and metadata
 	cache *cache.Cache               // Optional in-memory cache layer
 }
@@ -84,14 +85,25 @@ func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic)
 		}
 	}
 
+	// Initialize TSDB if provided as 3rd arg
+	if len(this.sla.Args()) > 2 {
+		if tsdb, ok := this.sla.Args()[2].(common.ITSDB); ok {
+			this.tsdb = tsdb
+		}
+	}
+
 	return nil
 }
 
-// DeActivate cleans up the OrmService, closing the cache and underlying database connection.
+// DeActivate cleans up the OrmService, closing the cache, TSDB, and underlying database connection.
 func (this *OrmService) DeActivate() error {
 	if this.cache != nil {
 		this.cache.Close()
 		this.cache = nil
+	}
+	if this.tsdb != nil {
+		this.tsdb.Close()
+		this.tsdb = nil
 	}
 	err := this.orm.Close()
 	this.orm = nil
@@ -159,12 +171,18 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 		return pb
 	}
 
-	// This is a query — try cache fetch first
+	// This is a query
 	query, err := pb.Query(vnic.Resources())
 	if err != nil {
 		return object.NewError(err.Error())
 	}
 
+	// Route TSDB queries to the time series store
+	if isTsdbQuery(query) {
+		return this.handleTsdbQuery(query)
+	}
+
+	// Try cache fetch first for relational queries
 	if cached := this.cacheFetch(query); cached != nil {
 		return cached
 	}

@@ -104,6 +104,11 @@ func clean(db *sql.DB) {
 	}
 }
 
+// cleanTsdb drops the TSDB table to reset state before TSDB tests.
+func cleanTsdb(db *sql.DB) {
+	db.Exec("drop table if exists l8tsdb;")
+}
+
 // cleanTargetTables drops target-related tables to reset state before target tests.
 func cleanTargetTables(db *sql.DB) {
 	db.Exec("drop table if exists l8phostprotocol;")

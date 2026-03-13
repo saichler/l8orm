@@ -21,6 +21,8 @@ package common
 import (
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8api"
+	"github.com/saichler/l8types/go/types/l8notify"
 )
 
 // IORM defines the primary interface for Object-Relational Mapping operations.
@@ -46,6 +48,21 @@ type IORM interface {
 // and should be skipped by the relational ORM.
 func IsTimeSeriesType(typeName string) bool {
 	return typeName == "L8TimeSeriesPoint"
+}
+
+// ITSDB defines the interface for Time Series Database operations.
+// Implementations handle storage and retrieval of time series data points
+// using a backend optimized for time-ordered data (e.g., TimescaleDB).
+type ITSDB interface {
+	// AddTSDB writes time series data points to the TSDB.
+	AddTSDB(notifications []*l8notify.L8TSDBNotification) error
+
+	// GetTSDB retrieves time series data points for a property within a time range.
+	// start and end are Unix timestamps (seconds).
+	GetTSDB(propertyId string, start, end int64) ([]*l8api.L8TimeSeriesPoint, error)
+
+	// Close releases database connections and cleans up resources.
+	Close() error
 }
 
 // IORMRelational extends IORM with methods for working directly with relational data.
