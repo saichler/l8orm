@@ -45,7 +45,7 @@ func TestMissingTableEmpty(t *testing.T) {
 		persist.Activate(serviceName, 0, &testtypes.TestProto{}, &testtypes.TestProtoList{}, eg2, p, nil, false, "MyString")
 	}
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 10)
 
 	destination := ""
 

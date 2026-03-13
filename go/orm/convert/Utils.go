@@ -16,6 +16,7 @@ package convert
 
 import (
 	"errors"
+	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"strings"
 	"sync"
@@ -72,6 +73,9 @@ func addTable(node *l8reflect.L8Node, rlData *l8orms.L8OrmRData, properties ...s
 		SetColumns(table, node)
 		for _, attr := range node.Attributes {
 			if attr.IsStruct {
+				if common.IsTimeSeriesType(attr.TypeName) {
+					continue
+				}
 				err := addTable(attr, rlData)
 				if err != nil {
 					return err

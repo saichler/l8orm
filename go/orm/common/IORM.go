@@ -42,6 +42,12 @@ type IORM interface {
 	Close() error
 }
 
+// IsTimeSeriesType returns true for types that are handled by the TSDB service
+// and should be skipped by the relational ORM.
+func IsTimeSeriesType(typeName string) bool {
+	return typeName == "L8TimeSeriesPoint"
+}
+
 // IORMRelational extends IORM with methods for working directly with relational data.
 // This interface is useful when you need more control over the relational representation
 // of data, bypassing the automatic object conversion.

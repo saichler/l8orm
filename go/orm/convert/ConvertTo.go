@@ -16,6 +16,7 @@ package convert
 
 import (
 	"bytes"
+	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"reflect"
 	"strconv"
@@ -117,6 +118,9 @@ func convertTo(action ifs.Action, value reflect.Value, parentKey, myKey string, 
 	subTableAttributes := make(map[string]*l8reflect.L8Node)
 	for attrName, attrNode := range node.Attributes {
 		if attrNode.IsStruct {
+			if common.IsTimeSeriesType(attrNode.TypeName) {
+				continue
+			}
 			subTableAttributes[attrName] = attrNode
 			continue
 		}

@@ -15,6 +15,7 @@ limitations under the License.
 package convert
 
 import (
+	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8types/go/types/l8api"
 	"reflect"
@@ -73,6 +74,9 @@ func convertFrom(node *l8reflect.L8Node, parentKey string, data *l8orms.L8OrmRDa
 		value := reflect.ValueOf(instance).Elem()
 		for attrName, attrNode := range node.Attributes {
 			if attrNode.IsStruct {
+				if common.IsTimeSeriesType(attrNode.TypeName) {
+					continue
+				}
 				if !subAttributesFull {
 					subTableAttributes[attrName] = attrNode
 				}

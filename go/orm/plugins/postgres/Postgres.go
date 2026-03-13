@@ -27,6 +27,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
 	"github.com/saichler/l8types/go/types/l8reflect"
@@ -146,6 +147,9 @@ func collectTables(node *l8reflect.L8Node, tables map[string]bool) {
 	if node.Attributes != nil {
 		for _, attr := range node.Attributes {
 			if attr.IsStruct {
+				if common.IsTimeSeriesType(attr.TypeName) {
+					continue
+				}
 				_, ok := tables[attr.TypeName]
 				if !ok {
 					collectTables(attr, tables)
