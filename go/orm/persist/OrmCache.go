@@ -122,7 +122,14 @@ func (this *OrmService) loadCacheInitElements(vnic ifs.IVNic) []interface{} {
 	if result == nil || result.Error() != nil {
 		return nil
 	}
-	return result.Elements()
+	elements := result.Elements()
+	filtered := make([]interface{}, 0, len(elements))
+	for _, elem := range elements {
+		if elem != nil {
+			filtered = append(filtered, elem)
+		}
+	}
+	return filtered
 }
 
 // cacheMetadata returns the cache metadata (counts) or nil if cache is nil.
