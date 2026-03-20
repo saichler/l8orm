@@ -1,19 +1,21 @@
 # Layer 8 Distributed ORM as a Service
 
-A distributed, horizontally and vertically scalable ORM (Object-Relational Mapping) service built on the Layer8 networking framework. L8ORM provides automatic conversion between Go objects and PostgreSQL, with built-in support for time series data, query caching, write-through caching, and service mesh integration.
+A distributed, horizontally and vertically scalable ORM (Object-Relational Mapping) service built on the Layer 8 networking framework. L8ORM provides automatic conversion between Go objects and PostgreSQL, with built-in support for time series data, query caching, write-through caching, and service mesh integration.
 
 ## Features
 
 - **Distributed Architecture**: Horizontally and vertically scalable ORM service with service mesh integration via l8bus
 - **Two-Layer Conversion**: Objects ↔ L8OrmRData (relational intermediate format) ↔ Database
-- **PostgreSQL Plugin**: Native PostgreSQL integration with connection pooling, upserts, and automatic table creation
+- **PostgreSQL Plugin**: Native PostgreSQL integration with connection pooling, upserts, and automatic table/index creation
 - **Time Series Database (TSDB)**: TimescaleDB-backed time series storage with hypertable chunking, separate from the relational ORM
 - **Query Cache**: 30-second TTL cache for pagination optimization with background TTL cleaner
-- **Write-Through Cache**: Optional in-memory cache layer with automatic invalidation on writes/deletes
+- **Write-Through Cache**: Optional in-memory cache layer with automatic invalidation on writes/deletes, initialized from existing database contents on startup
+- **Wildcard Query Support**: L8Query wildcard (`*`) automatically converted to SQL `LIKE` with `%` syntax
 - **Protocol Buffers**: Protobuf-based relational intermediate format for efficient serialization
 - **Transaction Support**: ACID-compliant transaction management with batch processing (default 500 elements)
 - **Before/After Callbacks**: Hook into CRUD operations for validation and business logic
 - **Composite Keys**: ParentKey + RecKey scheme supporting nested structures, slices, and maps
+- **Automatic Indexing**: Non-unique indexes created automatically for decorated fields
 - **Pluggable Design**: `IORM` and `ITSDB` interfaces allow custom database implementations
 
 ## Architecture
@@ -51,7 +53,7 @@ A distributed, horizontally and vertically scalable ORM (Object-Relational Mappi
 
 - **ORM Service** (`orm/persist`): Service mesh wrapper exposing CRUD as distributed endpoints with cache, TSDB routing, and before/after callbacks
 - **Convert Layer** (`orm/convert`): Bidirectional conversion between Go objects and the L8OrmRData relational format
-- **Statement Builder** (`orm/stmt`): SQL generation for SELECT, INSERT, UPDATE, DELETE, and metadata queries with prepared statement caching
+- **Statement Builder** (`orm/stmt`): SQL generation for SELECT, INSERT, UPDATE, DELETE, and metadata queries with prepared statement caching and wildcard support
 - **PostgreSQL Plugin** (`orm/plugins/postgres`): IORM implementation with query caching, automatic table/index creation, and batch processing
 - **TSDB Plugin** (`orm/plugins/postgres`): ITSDB implementation using TimescaleDB hypertables for time series data
 
@@ -85,7 +87,7 @@ go/
 │       ├── Insert.go       # INSERT ON CONFLICT (upsert)
 │       ├── Update.go       # UPDATE with COALESCE (PATCH)
 │       ├── Delete.go       # DELETE generation
-│       ├── QueryToSql.go   # L8Query → SQL WHERE clause
+│       ├── QueryToSql.go   # L8Query → SQL WHERE clause (with wildcard support)
 │       └── MetaData.go     # COUNT for pagination
 ├── types/l8orms/           # Generated protobuf types
 ├── tests/                  # All tests
@@ -141,10 +143,10 @@ go get github.com/saichler/l8orm/go
 ### PostgreSQL Setup
 
 ```bash
-# Start PostgreSQL (Docker)
-./go/start-db.sh
+# Start PostgreSQL using the recommended script
+cd go && ./start-db.sh
 
-# Or using the scripts directory
+# Or using the scripts directory (vanilla postgres)
 ./scripts/start-postgres.sh
 ```
 
@@ -167,6 +169,25 @@ err := orm.Write(ifs.POST, elements, resources)
 
 // Delete by query
 err := orm.Delete(query, resources)
+```
+
+### Service Mesh Integration
+
+```go
+import "github.com/saichler/l8orm/go/orm/persist"
+
+// Activate an ORM service on the service mesh with cache enabled
+persist.Activate(
+    "MyService",       // Service name
+    byte(10),          // Service area
+    &MyType{},         // Item prototype
+    &MyTypeList{},     // List prototype
+    vnic,              // Virtual NIC
+    orm,               // IORM implementation
+    callback,          // Service callback (before/after hooks)
+    true,              // Enable write-through cache
+    "myTypeId",        // Primary key field(s)
+)
 ```
 
 ### Time Series Data
@@ -207,11 +228,11 @@ cd go
 ```
 
 Test coverage includes:
-- PostgreSQL CRUD operations
+- PostgreSQL CRUD operations (POST, PUT, DELETE)
 - PATCH/partial update semantics
 - Service mesh integration
 - Object ↔ relational conversion
-- Write-through cache operations
+- Write-through cache operations (with database pre-loading)
 - Missing/empty table handling
 - TSDB write, read, time range queries, and edge cases
 
