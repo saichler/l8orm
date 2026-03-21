@@ -40,9 +40,15 @@ func (this *Statement) Query2CountSql(query ifs.IQuery, typeName string) string 
 }
 
 // Query2Sql generates a SELECT SQL string from a query object.
-// It handles column projections, WHERE criteria, ORDER BY, LIMIT, and OFFSET clauses.
+// It handles column projections, aggregate functions, WHERE criteria,
+// GROUP BY, HAVING, ORDER BY, LIMIT, and OFFSET clauses.
 // Returns false if the query doesn't select any columns for this table.
 func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, bool) {
+	// Delegate to aggregate SQL builder when aggregate functions are present
+	if len(query.Aggregates()) > 0 {
+		return this.query2AggregateSql(query, typeName)
+	}
+
 	buff := bytes.Buffer{}
 	if query.Properties() == nil || len(query.Properties()) == 0 {
 		buff.WriteString("Select ")
@@ -107,6 +113,94 @@ func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, boo
 			buff.WriteString(fmt.Sprintf(" OFFSET %d", offset))
 		}
 	}
+	return buff.String(), true
+}
+
+// query2AggregateSql generates a SELECT SQL string for aggregate queries.
+// It builds the SELECT clause with aggregate functions and group-by fields,
+// then appends WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, and OFFSET clauses.
+func (this *Statement) query2AggregateSql(query ifs.IQuery, typeName string) (string, bool) {
+	buff := bytes.Buffer{}
+	buff.WriteString("Select ")
+
+	first := true
+
+	// Add group-by fields to SELECT
+	for _, gb := range query.GroupBy() {
+		if !first {
+			buff.WriteString(",")
+		}
+		first = false
+		buff.WriteString(gb)
+	}
+
+	// Add aggregate functions to SELECT
+	for _, agg := range query.Aggregates() {
+		if !first {
+			buff.WriteString(",")
+		}
+		first = false
+		buff.WriteString(strings.ToUpper(agg.Function))
+		buff.WriteString("(")
+		buff.WriteString(agg.Field)
+		buff.WriteString(") AS ")
+		buff.WriteString(agg.Alias)
+	}
+
+	buff.WriteString(" from ")
+	buff.WriteString(typeName)
+
+	// Add WHERE clause
+	if query.Criteria() != nil && typeName == query.RootType().TypeName {
+		ok, str := expression(query.Criteria(), query.RootType().TypeName)
+		if ok {
+			buff.WriteString(" where ")
+			buff.WriteString(str)
+		}
+	}
+
+	// Add GROUP BY clause
+	if len(query.GroupBy()) > 0 {
+		buff.WriteString(" GROUP BY ")
+		for i, gb := range query.GroupBy() {
+			if i > 0 {
+				buff.WriteString(",")
+			}
+			buff.WriteString(gb)
+		}
+	}
+
+	// Add HAVING clause
+	if query.Having() != nil && typeName == query.RootType().TypeName {
+		ok, str := expression(query.Having(), query.RootType().TypeName)
+		if ok {
+			buff.WriteString(" HAVING ")
+			buff.WriteString(str)
+		}
+	}
+
+	// Add ORDER BY clause
+	if query.SortBy() != "" {
+		buff.WriteString(" ORDER BY ")
+		buff.WriteString(query.SortBy())
+		if query.Descending() {
+			buff.WriteString(" DESC")
+		} else {
+			buff.WriteString(" ASC")
+		}
+	}
+
+	// Add LIMIT clause
+	if query.Limit() > 0 {
+		buff.WriteString(fmt.Sprintf(" LIMIT %d", query.Limit()))
+	}
+
+	// Add OFFSET clause
+	if query.Page() > 0 && query.Limit() > 0 {
+		offset := query.Page() * query.Limit()
+		buff.WriteString(fmt.Sprintf(" OFFSET %d", offset))
+	}
+
 	return buff.String(), true
 }
 
