@@ -182,11 +182,8 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 		return this.handleTsdbQuery(query)
 	}
 
-	// Skip cache for aggregate queries — aggregates must always hit the database
-	if len(query.Aggregates()) == 0 {
-		if cached := this.cacheFetch(query); cached != nil {
-			return cached
-		}
+	if cached := this.cacheFetch(query); cached != nil {
+		return cached
 	}
 
 	return this.fetchFromDbAndCache(query, vnic.Resources())

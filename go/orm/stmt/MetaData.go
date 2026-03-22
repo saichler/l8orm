@@ -28,7 +28,7 @@ func (this *Statement) MetaData(tx *sql.Tx) *l8api.L8MetaData {
 	}
 	metadata := &l8api.L8MetaData{}
 	metadata.KeyCount = &l8api.L8Count{}
-	metadata.KeyCount.Counts = make(map[string]int32)
+	metadata.KeyCount.Counts = make(map[string]float64)
 	totalRecords := 0
 	rows, err := stmt.Query()
 	if err != nil {
@@ -41,7 +41,7 @@ func (this *Statement) MetaData(tx *sql.Tx) *l8api.L8MetaData {
 			return nil
 		}
 	}
-	metadata.KeyCount.Counts["Total"] = int32(totalRecords)
+	metadata.KeyCount.Counts["Total"] = float64(totalRecords)
 	return metadata
 }
 

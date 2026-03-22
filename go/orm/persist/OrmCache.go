@@ -77,6 +77,9 @@ func (this *OrmService) cacheFetch(query ifs.IQuery) ifs.IElements {
 		blockSize = 100
 	}
 	values, metadata := this.cache.Fetch(start, blockSize, query)
+	if query.IsAggregate() {
+		return object.NewQueryResult(values, metadata)
+	}
 	if len(values) == 0 && start == 0 {
 		return nil
 	}
