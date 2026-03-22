@@ -17,6 +17,7 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/stmt"
 	"github.com/saichler/l8orm/go/types/l8orms"
@@ -141,6 +142,7 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8
 // For paginated queries (with Limit > 0), it uses the in-memory index cache.
 // For non-paginated queries, it performs a direct database read.
 func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
+	fmt.Println("[DEBUG-ORM] Read: IsAggregate=", len(q.Aggregates())>0, "Aggregates len=", len(q.Aggregates()), "Limit=", q.Limit())
 	// Check if this query benefits from indexing (has Limit for pagination)
 	if q.Limit() > 0 {
 		return this.readWithIndex(q, resources)

@@ -45,7 +45,9 @@ func (this *Statement) Query2CountSql(query ifs.IQuery, typeName string) string 
 // Returns false if the query doesn't select any columns for this table.
 func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, bool) {
 	// Delegate to aggregate SQL builder when aggregate functions are present
+	fmt.Println("[DEBUG-ORM] Query2Sql: Aggregates len=", len(query.Aggregates()), "typeName=", typeName)
 	if len(query.Aggregates()) > 0 {
+		fmt.Println("[DEBUG-ORM] Query2Sql: routing to aggregate SQL builder")
 		return this.query2AggregateSql(query, typeName)
 	}
 
