@@ -141,6 +141,10 @@ func (this *Postgres) readRows(rows *sql.Rows, statement *stmt.Statement) ([]*l8
 // For paginated queries (with Limit > 0), it uses the in-memory index cache.
 // For non-paginated queries, it performs a direct database read.
 func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
+	// Aggregate queries use a dedicated path (no ParentKey/RecKey scanning)
+	if q.IsAggregate() {
+		return this.readAggregate(q)
+	}
 	// Check if this query benefits from indexing (has Limit for pagination)
 	if q.Limit() > 0 {
 		return this.readWithIndex(q, resources)

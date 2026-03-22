@@ -116,6 +116,12 @@ func (this *Statement) Query2Sql(query ifs.IQuery, typeName string) (string, boo
 	return buff.String(), true
 }
 
+// AggregateSql generates an aggregate SQL string for the query's root type.
+// This is the public entry point used by ReadAggregate.
+func (this *Statement) AggregateSql(query ifs.IQuery) (string, bool) {
+	return this.query2AggregateSql(query, query.RootType().TypeName)
+}
+
 // query2AggregateSql generates a SELECT SQL string for aggregate queries.
 // It builds the SELECT clause with aggregate functions and group-by fields,
 // then appends WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, and OFFSET clauses.
