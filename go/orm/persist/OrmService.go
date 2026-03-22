@@ -19,7 +19,6 @@ limitations under the License.
 package persist
 
 import (
-	"fmt"
 	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
@@ -173,26 +172,23 @@ func (this *OrmService) Get(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	}
 
 	// This is a query
-	fmt.Println("[DEBUG-ORM] Get: calling pb.Query()")
 	query, err := pb.Query(vnic.Resources())
 	if err != nil {
-		fmt.Println("[DEBUG-ORM] Get: pb.Query() FAILED:", err.Error())
 		return object.NewError(err.Error())
 	}
-	fmt.Println("[DEBUG-ORM] Get: pb.Query() OK, IsAggregate=", len(query.Aggregates())>0, "Aggregates len=", len(query.Aggregates()))
 
 	// Route TSDB queries to the time series store
 	if isTsdbQuery(query) {
 		return this.handleTsdbQuery(query)
 	}
 
-	// Try cache fetch first for relational queries
-	if cached := this.cacheFetch(query); cached != nil {
-		fmt.Println("[DEBUG-ORM] Get: returning cached result")
-		return cached
+	// Skip cache for aggregate queries — aggregates must always hit the database
+	if len(query.Aggregates()) == 0 {
+		if cached := this.cacheFetch(query); cached != nil {
+			return cached
+		}
 	}
 
-	fmt.Println("[DEBUG-ORM] Get: fetching from DB")
 	return this.fetchFromDbAndCache(query, vnic.Resources())
 }
 
