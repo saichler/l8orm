@@ -75,6 +75,12 @@ func (this *OrmService) Activate(sla *ifs.ServiceLevelAgreement, vnic ifs.IVNic)
 			return err
 		}
 	}
+	if sla.NonUniqueKeys() != nil {
+		err = vnic.Resources().Introspector().Decorators().AddNonUniqueKeyDecorator(sla.ServiceItem(), sla.NonUniqueKeys()...)
+		if err != nil {
+			return err
+		}
+	}
 
 	// Initialize cache if enabled
 	if len(this.sla.Args()) > 1 {
