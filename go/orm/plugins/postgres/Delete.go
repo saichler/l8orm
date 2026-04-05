@@ -17,7 +17,6 @@ package postgres
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/stmt"
 	"github.com/saichler/l8orm/go/types/l8orms"
@@ -29,18 +28,9 @@ import (
 // It maintains referential integrity by first deleting child table records
 // (using ParentKey pattern matching) before deleting root table records.
 func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
-	fmt.Println("[DEBUG-DELETE] DeleteRelational called, query text:", query.Text())
-	fmt.Println("[DEBUG-DELETE] RootType:", query.RootType().TypeName)
-	fmt.Println("[DEBUG-DELETE] Criteria is nil:", query.Criteria() == nil)
-
 	data, err := convert.NewRelationsDataForQuery(query)
 	if err != nil {
-		fmt.Println("[DEBUG-DELETE] NewRelationsDataForQuery error:", err)
 		return err
-	}
-	fmt.Println("[DEBUG-DELETE] Tables in relational data:", len(data.Tables))
-	for tName, t := range data.Tables {
-		fmt.Println("[DEBUG-DELETE]   table:", tName, "columns:", len(t.Columns))
 	}
 
 	this.mtx.Lock()
@@ -56,10 +46,8 @@ func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
 
 	defer func() {
 		if er != nil {
-			fmt.Println("[DEBUG-DELETE] Transaction ROLLBACK, error:", er)
 			er = tx.Rollback()
 		} else {
-			fmt.Println("[DEBUG-DELETE] Transaction COMMIT")
 			er = tx.Commit()
 		}
 	}()
@@ -68,18 +56,11 @@ func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
 	rootTableName := query.RootType().TypeName
 	rootKeys, er := this.readRootKeys(tx, query, data)
 	if er != nil {
-		fmt.Println("[DEBUG-DELETE] readRootKeys error:", er)
 		return er
-	}
-
-	fmt.Println("[DEBUG-DELETE] rootKeys count:", len(rootKeys))
-	for i, k := range rootKeys {
-		fmt.Println("[DEBUG-DELETE]   rootKey[", i, "]:", k)
 	}
 
 	// If no matching records found, nothing to delete
 	if len(rootKeys) == 0 {
-		fmt.Println("[DEBUG-DELETE] No matching records found — returning nil (silent no-op)")
 		return nil
 	}
 
@@ -121,21 +102,13 @@ func (this *Postgres) DeleteRelational(query ifs.IQuery) error {
 
 	rootTable := data.Tables[rootTableName]
 	rootStatement := stmt.NewStatement(rootNode, rootTable.Columns, query, this.res.Registry())
-	fmt.Println("[DEBUG-DELETE] Calling DeleteStatement for root table:", rootTableName)
 	rootDeleteStmt, err := rootStatement.DeleteStatement(tx, "")
 	if err != nil {
-		fmt.Println("[DEBUG-DELETE] DeleteStatement error:", err)
 		er = err
 		return er
 	}
 
-	result, er := rootDeleteStmt.Exec()
-	if er != nil {
-		fmt.Println("[DEBUG-DELETE] Root DELETE exec error:", er)
-	} else {
-		rowsAffected, _ := result.RowsAffected()
-		fmt.Println("[DEBUG-DELETE] Root DELETE exec success, rows affected:", rowsAffected)
-	}
+	_, er = rootDeleteStmt.Exec()
 	return er
 }
 
@@ -151,20 +124,16 @@ func (this *Postgres) readRootKeys(tx *sql.Tx, query ifs.IQuery, data *l8orms.L8
 	}
 
 	statement := stmt.NewStatement(node, rootTable.Columns, query, this.res.Registry())
-	fmt.Println("[DEBUG-DELETE] readRootKeys: calling SelectStatement for", rootTableName)
 	selectStmt, err := statement.SelectStatement(tx)
 	if err != nil {
-		fmt.Println("[DEBUG-DELETE] readRootKeys: SelectStatement error:", err)
 		return nil, err
 	}
 	if selectStmt == nil {
-		fmt.Println("[DEBUG-DELETE] readRootKeys: SelectStatement returned nil — Query2Sql likely returned !ok")
 		return nil, nil
 	}
 
 	rows, err := selectStmt.Query()
 	if err != nil {
-		fmt.Println("[DEBUG-DELETE] readRootKeys: Query() error:", err)
 		return nil, err
 	}
 	defer rows.Close()

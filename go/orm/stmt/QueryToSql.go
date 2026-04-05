@@ -268,36 +268,23 @@ func comparator(comp ifs.IComparator, typeName string) (bool, string) {
 	rightOK := false
 	rightString := false
 
-	fmt.Println("[DEBUG-DELETE] comparator: Left()=", comp.Left(), "Right()=", comp.Right(), "Operator()=", comp.Operator(), "typeName=", typeName)
-
 	if !isNil(comp.LeftProperty()) {
-		fmt.Println("[DEBUG-DELETE] comparator: LeftProperty Node.FieldName=", comp.LeftProperty().Node().FieldName,
-			"Node.Parent.TypeName=", comp.LeftProperty().Node().Parent.TypeName,
-			"IsString=", comp.LeftProperty().IsString())
 		if comp.LeftProperty().Node().Parent.TypeName == typeName {
 			leftOK = true
 			if comp.LeftProperty().IsString() {
 				leftString = true
 			}
 		}
-	} else {
-		fmt.Println("[DEBUG-DELETE] comparator: LeftProperty is nil")
 	}
 
 	if !isNil(comp.RightProperty()) {
-		fmt.Println("[DEBUG-DELETE] comparator: RightProperty Node.FieldName=", comp.RightProperty().Node().FieldName,
-			"Node.Parent.TypeName=", comp.RightProperty().Node().Parent.TypeName)
 		if comp.RightProperty().Node().Parent.TypeName == typeName {
 			rightOK = true
 			if comp.RightProperty().IsString() {
 				rightString = true
 			}
 		}
-	} else {
-		fmt.Println("[DEBUG-DELETE] comparator: RightProperty is nil")
 	}
-
-	fmt.Println("[DEBUG-DELETE] comparator: leftOK=", leftOK, "leftString=", leftString, "rightOK=", rightOK, "rightString=", rightString)
 
 	buff := bytes.Buffer{}
 	if leftString && !rightString {

@@ -16,7 +16,6 @@ package stmt
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8utils/go/utils/strings"
 )
@@ -36,18 +35,11 @@ func (this *Statement) DeleteStatement(tx *sql.Tx, parentKeyPattern string) (*sq
 	} else if this.query != nil && this.query.Criteria() != nil {
 		// For root table, use the query criteria
 		ok, whereClause := expression(this.query.Criteria(), this.query.RootType().TypeName)
-		fmt.Println("[DEBUG-DELETE] DeleteStatement expression ok:", ok, "whereClause:", whereClause)
 		if ok {
 			del.Add(" WHERE ")
 			del.Add(whereClause)
-		} else {
-			fmt.Println("[DEBUG-DELETE] DeleteStatement: expression returned !ok — DELETE will have NO WHERE clause")
 		}
-	} else {
-		fmt.Println("[DEBUG-DELETE] DeleteStatement: no criteria on query — DELETE will have NO WHERE clause")
 	}
-
-	fmt.Println("[DEBUG-DELETE] DeleteStatement SQL:", del.String())
 	del.Add(";")
 	return tx.Prepare(del.String())
 }
