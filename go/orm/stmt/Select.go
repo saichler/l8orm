@@ -16,6 +16,7 @@ package stmt
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8utils/go/utils/strings"
@@ -41,7 +42,9 @@ func (this *Statement) createSelectStatement(tx *sql.Tx) error {
 	var sel *strings.String
 	if this.query != nil {
 		s, ok := this.Query2Sql(this.query, this.node.TypeName)
+		fmt.Println("[DEBUG-DELETE] createSelectStatement Query2Sql ok:", ok, "sql:", s)
 		if !ok {
+			fmt.Println("[DEBUG-DELETE] createSelectStatement: Query2Sql returned !ok — selectStmt will be nil")
 			return nil
 		}
 		sel = strings.New(s)
