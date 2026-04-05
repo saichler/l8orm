@@ -151,8 +151,26 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if err != nil {
 		return object.NewError(err.Error())
 	}
+
+	// Fetch matching elements from cache before deleting from DB,
+	// so we can remove them from cache after a successful delete.
+	cached := this.cacheFetch(query)
+
 	err = this.orm.Delete(query, vnic.Resources())
-	return object.New(err, nil)
+	if err != nil {
+		return object.New(err, nil)
+	}
+
+	// Remove the matched elements from cache
+	if cached != nil {
+		for _, elem := range cached.Elements() {
+			if elem != nil {
+				this.cacheDelete(elem)
+			}
+		}
+	}
+
+	return object.New(nil, nil)
 }
 
 // Get handles GET requests to retrieve records from the database.
