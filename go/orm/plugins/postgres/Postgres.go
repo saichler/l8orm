@@ -178,14 +178,108 @@ func (this *Postgres) verifyTables(rootNode *l8reflect.L8Node) error {
 }
 
 // verifyTable checks if a table exists and creates it if not.
+// If the table already exists, it reconciles its columns with the current
+// proto definition and adds any missing columns via ALTER TABLE.
 // Uses a test query to detect non-existent tables.
 func (this *Postgres) verifyTable(tableName string) error {
 	q := strings.New("select * from ", tableName, " where false;")
 	_, err := this.db.Exec(q.String())
-	if err != nil && strings2.Contains(err.Error(), "does not exist") {
-		return this.createTable(tableName)
+	if err != nil {
+		if strings2.Contains(err.Error(), "does not exist") {
+			return this.createTable(tableName)
+		}
+		return err
 	}
-	return err
+	// Table exists — reconcile its columns with the current proto definition.
+	return this.migrateTable(tableName)
+}
+
+// migrateTable compares the live table columns against the current proto
+// definition and adds any missing columns via ALTER TABLE ADD COLUMN.
+// It is purely additive: columns that exist in the table but not in the
+// proto are left alone, and type changes are not handled. Non-unique
+// indexes are created for any newly added columns that are decorated as
+// non-unique, matching the DDL pattern used by createTable.
+func (this *Postgres) migrateTable(tableName string) error {
+	node, ok := this.res.Introspector().NodeByTypeName(tableName)
+	if !ok {
+		return errors.New("Cannot find node for table " + tableName)
+	}
+
+	// Fetch the live column set. information_schema folds unquoted
+	// identifiers to lowercase, so we compare case-insensitively.
+	rows, err := this.db.Query(
+		"SELECT column_name FROM information_schema.columns WHERE table_name = $1",
+		strings2.ToLower(tableName))
+	if err != nil {
+		return err
+	}
+	liveColumns := make(map[string]bool)
+	for rows.Next() {
+		var colName string
+		if scanErr := rows.Scan(&colName); scanErr != nil {
+			rows.Close()
+			return scanErr
+		}
+		liveColumns[strings2.ToLower(colName)] = true
+	}
+	rows.Close()
+
+	// Walk the proto attributes with the same skip rules createTable uses,
+	// collecting scalar attributes that are missing from the live table.
+	missing := make([]string, 0)
+	missingTypes := make(map[string]string)
+	for attrName, attr := range node.Attributes {
+		if attr.IsStruct {
+			continue
+		}
+		if common.IsTimeSeriesType(attr.TypeName) {
+			continue
+		}
+		if liveColumns[strings2.ToLower(attrName)] {
+			continue
+		}
+		missing = append(missing, attrName)
+		missingTypes[attrName] = postgresTypeOf(attr)
+	}
+
+	if len(missing) == 0 {
+		return nil
+	}
+
+	this.res.Logger().Info("Migrating table ", tableName, ": adding columns ", missing)
+
+	for _, attrName := range missing {
+		alterQ := strings.New("ALTER TABLE ", tableName, " ADD COLUMN ", attrName, " ", missingTypes[attrName], ";")
+		_, err = this.db.Exec(alterQ.String())
+		if err != nil {
+			return err
+		}
+	}
+
+	// Recreate non-unique indexes for any newly added columns that are
+	// decorated as non-unique. Use IF NOT EXISTS so a partially-applied
+	// prior migration does not fail.
+	nonUniqueFields, nonUniqueErr := this.res.Introspector().Decorators().Fields(node, l8reflect.L8DecoratorType_NonUnique)
+	if nonUniqueErr == nil && nonUniqueFields != nil {
+		missingSet := make(map[string]bool, len(missing))
+		for _, name := range missing {
+			missingSet[name] = true
+		}
+		for _, fieldName := range nonUniqueFields {
+			if !missingSet[fieldName] {
+				continue
+			}
+			this.res.Logger().Info("Creating non-unique index ", tableName, "_", fieldName, "_idx")
+			indexQ := strings.New("CREATE INDEX IF NOT EXISTS ", tableName, "_", fieldName, "_idx ON ", tableName, " (", fieldName, ");")
+			_, err = this.db.Exec(indexQ.String())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // createTable generates and executes DDL to create a table for the given type.
