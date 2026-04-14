@@ -57,12 +57,14 @@ func (this *OrmService) cachePatch(element interface{}) {
 
 // cacheDelete removes an element from the cache.
 // Notifications are disabled since the ORM service layer handles its own callbacks.
-// No-op if cache is nil.
-func (this *OrmService) cacheDelete(element interface{}) {
+// No-op if cache is nil. Returns any error from the underlying cache so the caller
+// can log it with service/type context instead of silently swallowing failures.
+func (this *OrmService) cacheDelete(element interface{}) error {
 	if this.cache == nil {
-		return
+		return nil
 	}
-	this.cache.Delete(element, false)
+	_, err := this.cache.Delete(element, false)
+	return err
 }
 
 // cacheFetch retrieves a paginated slice of elements from the cache matching a query.

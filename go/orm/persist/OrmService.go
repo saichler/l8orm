@@ -136,7 +136,10 @@ func (this *OrmService) Patch(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 // When cache is enabled, removes elements from cache in addition to the database.
 func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if pb.IsFilterMode() {
-		this.cacheDelete(pb.Element())
+		if err := this.cacheDelete(pb.Element()); err != nil {
+			vnic.Resources().Logger().Error("OrmService.Delete cache delete failed for ",
+				this.sla.ServiceName(), " area ", this.sla.ServiceArea(), ": ", err.Error())
+		}
 
 		q, e := ElementToQuery(pb, this.sla.ServiceItem(), vnic)
 		if e != nil {
@@ -165,7 +168,10 @@ func (this *OrmService) Delete(pb ifs.IElements, vnic ifs.IVNic) ifs.IElements {
 	if cached != nil {
 		for _, elem := range cached.Elements() {
 			if elem != nil {
-				this.cacheDelete(elem)
+				if cerr := this.cacheDelete(elem); cerr != nil {
+					vnic.Resources().Logger().Error("OrmService.Delete cache delete failed for ",
+						this.sla.ServiceName(), " area ", this.sla.ServiceArea(), ": ", cerr.Error())
+				}
 			}
 		}
 	}
