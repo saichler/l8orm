@@ -16,6 +16,7 @@ package convert
 
 import (
 	"bytes"
+	"errors"
 	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"reflect"
@@ -39,7 +40,11 @@ func ConvertTo(action ifs.Action, objects ifs.IElements, res ifs.IResources) ifs
 	data := &l8orms.L8OrmRData{}
 	data.Tables = make(map[string]*l8orms.L8OrmTable)
 	v := reflect.ValueOf(objects.Element())
-	data.RootTypeName = TypeOf(v)
+	typeName, err := TypeOf(v)
+	if err != nil {
+		return object.NewError(err.Error())
+	}
+	data.RootTypeName = typeName
 
 	node, ok := res.Introspector().Node(data.RootTypeName)
 	if !ok {
@@ -80,18 +85,18 @@ func ConvertTo(action ifs.Action, objects ifs.IElements, res ifs.IResources) ifs
 // For slices and maps, it returns the element type name.
 // For pointers, it returns the pointed-to type name.
 // For structs, it returns the struct type name directly.
-func TypeOf(v reflect.Value) string {
-	if v.Kind() == reflect.Slice || v.Kind() == reflect.Map {
-		return v.Type().Elem().Elem().Name()
-	} else if v.Kind() == reflect.Ptr {
-		return v.Elem().Type().Name()
-	} else if v.Kind() == reflect.Struct {
-		return v.Type().Name()
-	}
+func TypeOf(v reflect.Value) (string, error) {
 	if !v.IsValid() {
-		panic("Value is invalid")
+		return "", errors.New("TypeOf: reflect.Value is invalid (nil element)")
 	}
-	panic("Unknown type: " + v.Type().Name())
+	if v.Kind() == reflect.Slice || v.Kind() == reflect.Map {
+		return v.Type().Elem().Elem().Name(), nil
+	} else if v.Kind() == reflect.Ptr {
+		return v.Elem().Type().Name(), nil
+	} else if v.Kind() == reflect.Struct {
+		return v.Type().Name(), nil
+	}
+	return "", errors.New("TypeOf: unsupported kind " + v.Kind().String() + " for type " + v.Type().Name())
 }
 
 // convertTo recursively converts a single Go value into relational table rows.
