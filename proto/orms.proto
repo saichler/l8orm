@@ -22,6 +22,9 @@ option java_outer_classname = "L8Orms";
 option java_package = "com.l8orms.types";
 option go_package = "./types/l8orms";
 
+import "api.proto";
+import "notification.proto";
+
 // L8OrmRData represents the root container for relational data in the L8 ORM system.
 // It holds a collection of tables and tracks the root type name for the data hierarchy.
 // This is the primary data structure used for object-relational mapping operations.
@@ -32,6 +35,7 @@ message L8OrmRData {
   // rootTypeName identifies the top-level type name in the object hierarchy.
   // This is used to reconstruct the original object structure from relational data.
   string rootTypeName = 2;
+  repeated l8notify.L8TSDBNotification ts_data = 3;
 }
 
 // L8OrmTable represents a database table corresponding to a Go struct type.
