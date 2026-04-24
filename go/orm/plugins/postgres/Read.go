@@ -154,7 +154,7 @@ func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements
 	if err != nil {
 		return object.NewError(err.Error())
 	}
-	return convert.ConvertFrom(object.New(nil, relData), metadata, resources)
+	return this.populateTsFields(convert.ConvertFrom(object.New(nil, relData), metadata, resources), resources)
 }
 
 // readWithIndex uses the in-memory primary index for paginated queries.
@@ -345,7 +345,7 @@ func (this *Postgres) readByRecKeys(query ifs.IQuery, recKeys []string, metadata
 		}
 	}
 
-	return convert.ConvertFrom(object.New(nil, data), metadata, resources)
+	return this.populateTsFields(convert.ConvertFrom(object.New(nil, data), metadata, resources), resources)
 }
 
 // parentKeyMatchesRecKeys checks if a child's ParentKey contains one of the root RecKeys.

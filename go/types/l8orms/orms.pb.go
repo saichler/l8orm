@@ -21,8 +21,8 @@
 package l8orms
 
 import (
-	_ "./types/l8api"
-	l8notify "./types/l8notify"
+	_ "github.com/saichler/l8types/go/types/l8api"
+	l8notify "github.com/saichler/l8types/go/types/l8notify"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

@@ -116,7 +116,11 @@ func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources if
 		if relData.Error() != nil {
 			return relData.Error()
 		}
-		return this.WriteRelational(action, relData.Element().(*l8orms.L8OrmRData))
+		data := relData.Element().(*l8orms.L8OrmRData)
+		if err := this.WriteRelational(action, data); err != nil {
+			return err
+		}
+		return this.writeTsData(data)
 	}
 
 	// Process in batches of batchSize
@@ -139,10 +143,20 @@ func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources if
 			return relData.Error()
 		}
 
-		err := this.WriteRelational(action, relData.Element().(*l8orms.L8OrmRData))
-		if err != nil {
+		data := relData.Element().(*l8orms.L8OrmRData)
+		if err := this.WriteRelational(action, data); err != nil {
+			return err
+		}
+		if err := this.writeTsData(data); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (this *Postgres) writeTsData(data *l8orms.L8OrmRData) error {
+	if len(data.TsData) == 0 {
+		return nil
+	}
+	return this.tsdb.AddTSDB(data.TsData)
 }

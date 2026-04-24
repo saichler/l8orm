@@ -76,6 +76,8 @@ type Postgres struct {
 	res       ifs.IResources       // Layer 8 resources (introspector, registry, etc.)
 	batchSize int                  // Maximum elements per write batch
 
+	tsdb *Tsdb
+
 	// Primary index for paging - caches query results for pagination
 	indexMtx      *sync.RWMutex              // Protects index cache
 	indexQueries  map[string]*cachedQuery    // Query hash -> cached results
@@ -94,6 +96,7 @@ func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 		mtx:          &sync.Mutex{},
 		res:          resourcs,
 		batchSize:    500,
+		tsdb:         NewTsdb(db, false),
 		indexMtx:     &sync.RWMutex{},
 		indexQueries: make(map[string]*cachedQuery),
 		indexStamp:   time.Now().Unix(),
@@ -352,6 +355,7 @@ func postgresTypeOf(node *l8reflect.L8Node) string {
 // Close stops the TTL cleaner goroutine and closes the database connection.
 func (this *Postgres) Close() error {
 	close(this.indexStopCh)
+	this.tsdb.Close()
 	this.db.Close()
 	return nil
 }
