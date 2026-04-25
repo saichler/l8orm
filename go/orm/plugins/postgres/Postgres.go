@@ -30,6 +30,7 @@ import (
 	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
+	"github.com/saichler/l8types/go/types/l8notify"
 	"github.com/saichler/l8types/go/types/l8reflect"
 	"github.com/saichler/l8utils/go/utils/strings"
 )
@@ -350,6 +351,14 @@ func postgresTypeOf(node *l8reflect.L8Node) string {
 	}
 	//default to enum for now - @TODO - reflect find what is the kind
 	return "integer"
+}
+
+func (this *Postgres) AddTSDB(notifications []*l8notify.L8TSDBNotification) error {
+	return this.tsdb.AddTSDB(notifications)
+}
+
+func (this *Postgres) GetTSDB(propertyId string, start, end int64) ([]*l8api.L8TimeSeriesPoint, error) {
+	return this.tsdb.GetTSDB(propertyId, start, end)
 }
 
 // Close stops the TTL cleaner goroutine and closes the database connection.
