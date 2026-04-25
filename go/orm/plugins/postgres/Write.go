@@ -17,6 +17,7 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/saichler/l8orm/go/orm/convert"
 	"github.com/saichler/l8orm/go/orm/stmt"
 	"github.com/saichler/l8orm/go/types/l8orms"
@@ -109,15 +110,19 @@ func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources if
 	defer this.invalidateIndex()
 
 	elements := elems.Elements()
+	fmt.Printf("[ORM Write] action=%v, elements=%d\n", action, len(elements))
 
 	// If within batch size, process directly (original behavior)
 	if len(elements) <= this.batchSize {
 		relData := convert.ConvertTo(action, elems, resources)
 		if relData.Error() != nil {
+			fmt.Printf("[ORM Write] ConvertTo error: %v\n", relData.Error())
 			return relData.Error()
 		}
 		data := relData.Element().(*l8orms.L8OrmRData)
+		fmt.Printf("[ORM Write] rootType=%s, tsData count=%d\n", data.RootTypeName, len(data.TsData))
 		if err := this.WriteRelational(action, data); err != nil {
+			fmt.Printf("[ORM Write] WriteRelational error: %v\n", err)
 			return err
 		}
 		return this.writeTsData(data)
@@ -155,8 +160,25 @@ func (this *Postgres) Write(action ifs.Action, elems ifs.IElements, resources if
 }
 
 func (this *Postgres) writeTsData(data *l8orms.L8OrmRData) error {
+	fmt.Printf("[ORM writeTsData] rootType=%s, tsData count=%d\n", data.RootTypeName, len(data.TsData))
 	if len(data.TsData) == 0 {
+		fmt.Println("[ORM writeTsData] no TS data to write, skipping")
 		return nil
 	}
-	return this.tsdb.AddTSDB(data.TsData)
+	for i, n := range data.TsData {
+		if n != nil && n.Point != nil {
+			fmt.Printf("[ORM writeTsData]   [%d] propId=%s stamp=%d value=%.4f\n", i, n.PropertyId, n.Point.Stamp, n.Point.Value)
+			if i >= 4 {
+				fmt.Printf("[ORM writeTsData]   ... (%d more)\n", len(data.TsData)-5)
+				break
+			}
+		}
+	}
+	err := this.tsdb.AddTSDB(data.TsData)
+	if err != nil {
+		fmt.Printf("[ORM writeTsData] AddTSDB error: %v\n", err)
+	} else {
+		fmt.Printf("[ORM writeTsData] AddTSDB success, wrote %d points\n", len(data.TsData))
+	}
+	return err
 }

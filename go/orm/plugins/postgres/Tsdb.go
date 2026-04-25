@@ -16,6 +16,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 	"sync"
 
 	"github.com/saichler/l8types/go/types/l8api"
@@ -71,18 +72,23 @@ func (this *Tsdb) verifyTable() error {
 
 // AddTSDB writes time series notifications to the database in a single transaction.
 func (this *Tsdb) AddTSDB(notifications []*l8notify.L8TSDBNotification) error {
+	fmt.Printf("[TSDB AddTSDB] called with %d notifications, verified=%v\n", len(notifications), this.verified)
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
 
 	if !this.verified {
+		fmt.Println("[TSDB AddTSDB] verifying table...")
 		if err := this.verifyTable(); err != nil {
+			fmt.Printf("[TSDB AddTSDB] verifyTable error: %v\n", err)
 			return err
 		}
 		this.verified = true
+		fmt.Println("[TSDB AddTSDB] table verified/created")
 	}
 
 	tx, err := this.db.Begin()
 	if err != nil {
+		fmt.Printf("[TSDB AddTSDB] begin tx error: %v\n", err)
 		return err
 	}
 
@@ -97,19 +103,24 @@ func (this *Tsdb) AddTSDB(notifications []*l8notify.L8TSDBNotification) error {
 	stmt, err := tx.Prepare(
 		"INSERT INTO l8tsdb (stamp, prop_id, value) VALUES (to_timestamp($1), $2, $3)")
 	if err != nil {
+		fmt.Printf("[TSDB AddTSDB] prepare error: %v\n", err)
 		return err
 	}
 	defer stmt.Close()
 
+	inserted := 0
 	for _, n := range notifications {
 		if n == nil || n.Point == nil {
 			continue
 		}
 		_, err = stmt.Exec(n.Point.Stamp, n.PropertyId, n.Point.Value)
 		if err != nil {
+			fmt.Printf("[TSDB AddTSDB] insert error: propId=%s stamp=%d err=%v\n", n.PropertyId, n.Point.Stamp, err)
 			return err
 		}
+		inserted++
 	}
+	fmt.Printf("[TSDB AddTSDB] inserted %d points\n", inserted)
 	return nil
 }
 
