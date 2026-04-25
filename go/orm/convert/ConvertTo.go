@@ -21,9 +21,12 @@ import (
 	"github.com/saichler/l8orm/go/types/l8orms"
 	"reflect"
 	"strconv"
+	strings2 "strings"
 
 	"github.com/saichler/l8srlz/go/serialize/object"
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8api"
+	"github.com/saichler/l8types/go/types/l8notify"
 	"github.com/saichler/l8types/go/types/l8reflect"
 	"github.com/saichler/l8utils/go/utils/strings"
 )
@@ -124,6 +127,7 @@ func convertTo(action ifs.Action, value reflect.Value, parentKey, myKey string, 
 	for attrName, attrNode := range node.Attributes {
 		if attrNode.IsStruct {
 			if common.IsTimeSeriesType(attrNode.TypeName) {
+				extractTsData(value, node, attrName, data, res)
 				continue
 			}
 			subTableAttributes[attrName] = attrNode
@@ -249,4 +253,36 @@ func KeyForRow(row *l8orms.L8OrmRow) string {
 	buff.WriteString(row.ParentKey)
 	buff.WriteString(row.RecKey)
 	return buff.String()
+}
+
+func extractTsData(value reflect.Value, node *l8reflect.L8Node, attrName string, data *l8orms.L8OrmRData, res ifs.IResources) {
+	fieldValue := value.FieldByName(attrName)
+	if !fieldValue.IsValid() || fieldValue.IsNil() || fieldValue.Len() == 0 {
+		return
+	}
+
+	key, _, _ := res.Introspector().Decorators().PrimaryKeyDecoratorFromValue(node, value)
+	if key == "" {
+		return
+	}
+
+	propertyId := strings2.ToLower(node.TypeName) + "<" + key + ">." + strings2.ToLower(attrName)
+
+	for i := 0; i < fieldValue.Len(); i++ {
+		pointVal := fieldValue.Index(i)
+		if pointVal.Kind() == reflect.Ptr {
+			if pointVal.IsNil() {
+				continue
+			}
+			pointVal = pointVal.Elem()
+		}
+		point, ok := pointVal.Addr().Interface().(*l8api.L8TimeSeriesPoint)
+		if !ok {
+			continue
+		}
+		data.TsData = append(data.TsData, &l8notify.L8TSDBNotification{
+			PropertyId: propertyId,
+			Point:      point,
+		})
+	}
 }
