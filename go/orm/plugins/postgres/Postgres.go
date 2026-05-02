@@ -21,7 +21,6 @@ package postgres
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	strings2 "strings"
 	"sync"
 	"sync/atomic"
@@ -316,7 +315,6 @@ func (this *Postgres) createTable(tableName string) error {
 
 	// Create non-unique indexes if available
 	if nonUniqueErr == nil && nonUniqueFieldsIndex != nil {
-		fmt.Println("Creating a none unique index for ", tableName)
 		for _, fieldName := range nonUniqueFieldsIndex {
 			indexQ := strings.New("CREATE INDEX ", tableName, "_", fieldName, "_idx ON ", tableName, " (", fieldName, ");")
 			_, err = this.db.Exec(indexQ.String())

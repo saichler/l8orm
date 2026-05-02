@@ -17,7 +17,6 @@ package postgres
 import (
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/saichler/l8orm/go/orm/common"
 	"github.com/saichler/l8types/go/ifs"
@@ -48,7 +47,6 @@ func (this *Postgres) populateTsFields(result ifs.IElements, resources ifs.IReso
 		return result
 	}
 
-	now := time.Now().Unix()
 	for _, elem := range elements {
 		if elem == nil {
 			continue
@@ -69,7 +67,7 @@ func (this *Postgres) populateTsFields(result ifs.IElements, resources ifs.IReso
 
 		for attrName := range tsAttrs {
 			propertyId := prefix + "." + strings.ToLower(attrName)
-			points, err := this.tsdb.GetTSDB(propertyId, 0, now)
+			points, err := this.tsdb.GetTSDBLatest(propertyId, 100)
 			if err != nil || len(points) == 0 {
 				continue
 			}
