@@ -63,7 +63,7 @@ func (this *OrmService) cacheDelete(element interface{}) error {
 	if this.cache == nil {
 		return nil
 	}
-	_, err := this.cache.Delete(element, false)
+	_, _, err := this.cache.Delete(element, false)
 	return err
 }
 
