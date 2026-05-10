@@ -211,7 +211,17 @@ func SetValueFromRow(colIndex int32, attrName string, value reflect.Value, row *
 	} else {
 		setFieldValue := reflect.ValueOf(v)
 		if fieldValue.Kind() == setFieldValue.Kind() {
-			fieldValue.Set(reflect.ValueOf(v))
+			if setFieldValue.Kind() == reflect.Slice &&
+				setFieldValue.Type() != fieldValue.Type() &&
+				fieldValue.Type().Elem().Kind() == reflect.Int32 {
+				converted := reflect.MakeSlice(fieldValue.Type(), setFieldValue.Len(), setFieldValue.Len())
+				for i := 0; i < setFieldValue.Len(); i++ {
+					converted.Index(i).SetInt(setFieldValue.Index(i).Int())
+				}
+				fieldValue.Set(converted)
+			} else {
+				fieldValue.Set(setFieldValue)
+			}
 		} else {
 			if setFieldValue.Kind() != reflect.String || setFieldValue.String() != "" {
 				panic("Not set" + setFieldValue.String())
