@@ -159,26 +159,33 @@ func (this *Postgres) Read(q ifs.IQuery, resources ifs.IResources) ifs.IElements
 
 // readWithIndex uses the in-memory primary index for paginated queries.
 // It caches the full query result's RecKeys and serves page requests from cache.
-// Cache entries are invalidated on writes and expired via TTL.
+// Cache entries are per-user (AAA ID combined into hash) and invalidated on writes.
 func (this *Postgres) readWithIndex(q ifs.IQuery, resources ifs.IResources) ifs.IElements {
+	aaaId := q.AAAId()
+	hash := int64(q.Hash())
+	if aaaId != "" {
+		hash = hash<<32 | int64(hashString(aaaId))
+	}
+
 	this.indexMtx.RLock()
-	cached, exists := this.indexQueries[q.Hash()]
+	cached, exists := this.indexQueries[hash]
 	currentStamp := this.indexStamp
 	this.indexMtx.RUnlock()
 
-	// Check cache validity
 	if exists && cached.stamp == currentStamp {
 		cached.touch()
 		return this.readByRecKeys(q, cached.pageKeys(q.Page(), q.Limit()), cached.metadata, resources)
 	}
 
-	// Cache miss or stale - fetch all RecKeys from DB
 	recKeys, metadata, err := this.readRecKeys(q)
 	if err != nil {
 		return object.NewError(err.Error())
 	}
 
-	// Cache the query
+	if aaaId != "" && resources.Security() != nil {
+		recKeys, metadata = this.filterRecKeysBySecurity(q, recKeys, resources, aaaId)
+	}
+
 	this.indexMtx.Lock()
 	cached = &cachedQuery{
 		recKeys:  recKeys,
@@ -186,11 +193,54 @@ func (this *Postgres) readWithIndex(q ifs.IQuery, resources ifs.IResources) ifs.
 		lastUsed: currentStamp,
 		metadata: metadata,
 	}
-	this.indexQueries[q.Hash()] = cached
+	this.indexQueries[hash] = cached
 	this.indexMtx.Unlock()
 
-	// Return the requested page
 	return this.readByRecKeys(q, cached.pageKeys(q.Page(), q.Limit()), metadata, resources)
+}
+
+// filterRecKeysBySecurity fetches full objects for the RecKeys, applies ScopeItem
+// to each, and returns only the RecKeys that pass the security filter.
+func (this *Postgres) filterRecKeysBySecurity(q ifs.IQuery, recKeys []string, resources ifs.IResources, aaaId string) ([]string, *l8api.L8MetaData) {
+	if len(recKeys) == 0 {
+		return recKeys, &l8api.L8MetaData{}
+	}
+
+	uuid := ""
+	if resources.SysConfig() != nil {
+		uuid = resources.SysConfig().LocalUuid
+	}
+
+	elements := this.readByRecKeys(q, recKeys, nil, resources)
+	if elements == nil || elements.Error() != nil {
+		return recKeys, &l8api.L8MetaData{}
+	}
+
+	elems := elements.Elements()
+	filteredKeys := make([]string, 0, len(recKeys))
+
+	for i, elem := range elems {
+		if elem == nil {
+			continue
+		}
+		if i >= len(recKeys) {
+			break
+		}
+		scoped := resources.Security().ScopeItem(resources, elem, uuid, aaaId)
+		if scoped != nil {
+			filteredKeys = append(filteredKeys, recKeys[i])
+		}
+	}
+
+	metadata := &l8api.L8MetaData{
+		KeyCount: &l8api.L8Count{
+			Counts: map[string]float64{
+				"Total": float64(len(filteredKeys)),
+			},
+		},
+	}
+
+	return filteredKeys, metadata
 }
 
 // readRecKeys fetches only RecKeys for the root table (for cache population).

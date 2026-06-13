@@ -80,7 +80,7 @@ type Postgres struct {
 
 	// Primary index for paging - caches query results for pagination
 	indexMtx      *sync.RWMutex              // Protects index cache
-	indexQueries  map[int32]*cachedQuery     // Query hash -> cached results
+	indexQueries  map[int64]*cachedQuery     // Query hash (+ AAA ID) -> cached results
 	indexStamp    int64                      // Global invalidation stamp
 	indexTTL      int64                      // Cache entry TTL in seconds
 	indexStopCh   chan struct{}              // Signal to stop TTL cleaner
@@ -98,7 +98,7 @@ func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 		batchSize:    500,
 		tsdb:         NewTsdb(db, false),
 		indexMtx:     &sync.RWMutex{},
-		indexQueries: make(map[int32]*cachedQuery),
+		indexQueries: make(map[int64]*cachedQuery),
 		indexStamp:   time.Now().Unix(),
 		indexTTL:     30,
 		indexStopCh:  make(chan struct{}),
@@ -357,6 +357,14 @@ func (this *Postgres) AddTSDB(notifications []*l8notify.L8TSDBNotification) erro
 
 func (this *Postgres) GetTSDB(propertyId string, start, end int64) ([]*l8api.L8TimeSeriesPoint, error) {
 	return this.tsdb.GetTSDB(propertyId, start, end)
+}
+
+func hashString(s string) int32 {
+	var h int32
+	for _, c := range s {
+		h = 31*h + int32(c)
+	}
+	return h
 }
 
 // Close stops the TTL cleaner goroutine and closes the database connection.
