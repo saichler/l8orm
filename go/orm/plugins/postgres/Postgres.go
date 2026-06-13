@@ -80,7 +80,7 @@ type Postgres struct {
 
 	// Primary index for paging - caches query results for pagination
 	indexMtx      *sync.RWMutex              // Protects index cache
-	indexQueries  map[string]*cachedQuery    // Query hash -> cached results
+	indexQueries  map[int32]*cachedQuery     // Query hash -> cached results
 	indexStamp    int64                      // Global invalidation stamp
 	indexTTL      int64                      // Cache entry TTL in seconds
 	indexStopCh   chan struct{}              // Signal to stop TTL cleaner
@@ -98,7 +98,7 @@ func NewPostgres(db *sql.DB, resourcs ifs.IResources) *Postgres {
 		batchSize:    500,
 		tsdb:         NewTsdb(db, false),
 		indexMtx:     &sync.RWMutex{},
-		indexQueries: make(map[string]*cachedQuery),
+		indexQueries: make(map[int32]*cachedQuery),
 		indexStamp:   time.Now().Unix(),
 		indexTTL:     30,
 		indexStopCh:  make(chan struct{}),
